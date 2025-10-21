@@ -1,0 +1,66 @@
+# -------------------------------
+# Fichiers système
+# -------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------------
+# Logs et cache
+# -------------------------------
+*.log
+*.cache
+tmp/
+cache/
+logs/
+
+# -------------------------------
+# Dépendances PHP
+# -------------------------------
+vendor/
+composer.lock
+
+# -------------------------------
+# Configuration sensible
+# -------------------------------
+.env
+.env.local
+config/*.local.php
+config/*.secret.php
+
+# -------------------------------
+# IDE et éditeurs
+# -------------------------------
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# -------------------------------
+# Node / NPM / Yarn
+# -------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# -------------------------------
+# Assets générés
+# -------------------------------
+dist/
+build/
+public/build/
+public/assets/
+
+# -------------------------------
+# Bases de données locales
+# -------------------------------
+*.sqlite
+*.db
+*.sql
+
+# -------------------------------
+# Autres fichiers temporaires
+# -------------------------------
+*.bak
+*.tmp
+*.swp
