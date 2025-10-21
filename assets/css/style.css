@@ -1,0 +1,74 @@
+/* Reset minimal */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+main {
+    padding-bottom: 80px; /* même hauteur que ton footer */
+}
+
+/* Conteneur global prend toute la hauteur */
+.page-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header en haut */
+.site-header {
+    background: #333;
+    color: #fff;
+    padding: 1rem;
+}
+
+/* Main prend tout l’espace restant */
+.site-content {
+    flex: 1;           /* indispensable */
+    padding: 2rem;
+    background: #f9f9f9;
+}
+
+/* Navbar transparente / light */
+.navbar {
+    background-color: transparent !important;
+    transition: all 0.3s ease;
+}
+
+.navbar .nav-link {
+    font-weight: 300;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.navbar .nav-link::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 1px;
+    background: #fff;
+    transition: width 0.3s;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.navbar .nav-link:hover::after {
+    width: 100%;
+}
+
+.navbar-brand {
+    font-weight: 300;
+}
+
+.navbar-toggler {
+    filter: invert(1); /* pour que l'icône soit visible sur header sombre */
+}
+
+input::placeholder{ font-size:10px}
+
