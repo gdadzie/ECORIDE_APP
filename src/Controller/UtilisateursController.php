@@ -6,9 +6,9 @@ require_once __DIR__ . '/../Entity/Utilisateur.php';
 require_once __DIR__ . '/../Repository/UtilisateursRepository.php';
 require_once __DIR__ . '/../../Config/Database.php';
 
-use Config\Database;
-use Entity\Utilisateur;
 use Repository\UtilisateursRepository;
+use Entity\Utilisateur;
+use Config\Database;
 
 class UtilisateursController
 {
@@ -20,71 +20,93 @@ class UtilisateursController
         $this->repo = new UtilisateursRepository($pdo);
     }
 
-    //------ SE CONNECTER ------//
+    // ------ Connexion ------
     public function login()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = $_POST['email'];
-            $mdp = $_POST['mdp'];
+        if(session_status() === PHP_SESSION_NONE) session_start();
 
-            $user = $this->repo->verifyLogin($email, $mdp);
-
-            if ($user) {
-                $_SESSION['user_id'] = $user->getIdUtilisateur();
-                $_SESSION['user_name'] = $user->getPseudo();
-
-                header('Location: index.php?page=tableau_de_bord');
-                exit;
-            } else {
-                $error = "Email ou mot de passe incorrect.";
-                include __DIR__ . '/../view/utilisateurs/connection.php';
-            }
-        } else {
-            include __DIR__ . '/../view/utilisateurs/connection.php';
+        if(isset($_SESSION['user'])){
+            header('Location: index.php?entity=utilisateurs&action=tableau_de_bord');
+            exit;
         }
+
+        $error = '';
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+            $login = trim($_POST['login'] ?? '');
+            $mdp   = $_POST['mot_de_passe'] ?? '';
+
+            if($login === '' || $mdp === ''){
+                $error = "Tous les champs doivent être remplis.";
+            } else {
+                $user = $this->repo->verifyLogin($login, $mdp);
+                if($user){
+                    $_SESSION['user'] = [
+                        'id' => $user->getIdUtilisateur(),
+                        'pseudo' => $user->getPseudo(),
+                        'email' => $user->getEmail(),
+                        'role' => $user->getRole()
+                    ];
+                    header('Location: index.php?entity=utilisateurs&action=tableau_de_bord');
+                    exit;
+                } else {
+                    $error = "Email ou mot de passe incorrect.";
+                }
+            }
+        }
+
+        require __DIR__ . '/../View/utilisateurs/connection.php';
     }
 
+    // ------ Inscription ------
 
-    // ---------------------------
-    // Affiche la liste des utilisateurs
-    // ---------------------------
-    public function index(): void
-    {
-        $users = $this->repo->findAll();
-        require __DIR__ . '/../View/accueil/index.php';
-    }
-
-    // ---------------------------
-    // Affiche le formulaire d'inscription (visiteur)
-    // ---------------------------
     public function register(): void
     {
+        // Démarre la session si ce n'est pas déjà fait
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $error = '';
+        $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                if (empty($_POST['pseudo']) || empty($_POST['email']) || empty($_POST['mot_de_passe'])) {
+                // Vérification des champs obligatoires
+                if (empty($_POST['pseudo']) || empty($_POST['email']) || empty($_POST['mdp'])) {
                     throw new \Exception("Tous les champs obligatoires doivent être remplis.");
                 }
+
+                // Vérification du format de l'email
                 if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
                     throw new \Exception("Adresse e-mail invalide.");
                 }
 
+                // Vérifie si l'email ou le pseudo existe déjà
+                $existingEmail = $this->repo->findByEmail($_POST['email']);
+                if ($existingEmail) {
+                    throw new \Exception("Cet email est déjà utilisé.");
+                }
+
+                // Création de l'objet Utilisateur
                 $user = new Utilisateur();
-                $user->setPseudo($_POST['pseudo']);
-                $user->setEmail($_POST['email']);
-                $user->setMdp(password_hash($_POST['mot_de_passe'], PASSWORD_BCRYPT));
                 $user->setNom($_POST['nom'] ?? '');
                 $user->setPrenom($_POST['prenom'] ?? '');
+                $user->setPseudo($_POST['pseudo']);
+                $user->setEmail($_POST['email']);
+                $user->setMdp(password_hash($_POST['mdp'], PASSWORD_BCRYPT));
                 $user->setTelephone($_POST['telephone'] ?? '');
-                $user->setRole($_POST['role'] ?? 'user');
+                $user->setRole($_POST['role'] ?? '1'); // 1 = Utilisateur par défaut
                 $user->setTypeCovoiturage($_POST['type_covoiturage'] ?? 'passager');
-                $user->setActif(1);
+                $user->setActif(isset($_POST['actif']) ? 1 : 0);
                 $user->setPhoto('');
+                $user->setDateCreation(date('Y-m-d H:i:s'));
 
+                // Sauvegarde dans la base
                 $this->repo->save($user);
 
-                header('Location: index.php?action=index&success=1');
+                // Message de succès et redirection vers la page de connexion
+                $success = "Compte créé avec succès. Vous pouvez maintenant vous connecter.";
+                header('Location: index.php?entity=utilisateurs&action=login&success=1');
                 exit;
 
             } catch (\Exception $e) {
@@ -92,78 +114,42 @@ class UtilisateursController
             }
         }
 
-        require __DIR__ . '/../View/utilisateurs/connection.php';
-    }
-
-    // ---------------------------
-    // Affiche le formulaire de création (admin)
-    // ---------------------------
-    public function create(): void
-    {
-        $error = '';
+        // Affiche le formulaire avec éventuelles erreurs
         require __DIR__ . '/../View/utilisateurs/creer_utilisateur.php';
     }
 
-    // ---------------------------
-    // Enregistre un nouvel utilisateur (admin)
-    // ---------------------------
 
-
-    // ---------------------------
-    // Affiche le formulaire de modification
-    // ---------------------------
-
-    // ---------------------------
-    // Met à jour un utilisateur
-    // ---------------------------
-    public function update(): void
+    // ------ Tableau de bord ------
+    public function dashboard()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = (int)($_POST['id_utilisateur'] ?? 0);
-            $user = $this->repo->find($id);
+        if(session_status() === PHP_SESSION_NONE) session_start();
 
-            if (!$user) {
-                header('Location: index.php?action=index&error=Utilisateur introuvable');
-                exit;
-            }
-
-            $user->setNom($_POST['nom']);
-            $user->setPrenom($_POST['prenom']);
-            $user->setEmail($_POST['email']);
-            $user->setTelephone($_POST['telephone']);
-            $user->setPseudo($_POST['pseudo']);
-            $user->setRole($_POST['role']);
-            $user->setTypeCovoiturage($_POST['type_covoiturage']);
-            $user->setActif(isset($_POST['actif']) ? 1 : 0);
-
-            $this->repo->update($user);
-
-            header('Location: index.php?action=index&success=2');
+        if(!isset($_SESSION['user'])){
+            header('Location: index.php?entity=utilisateurs&action=se_connecter');
             exit;
         }
+
+        // Empêche cache pour bouton arrière
+        header("Cache-Control: no-cache, no-store, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        $pseudo = $_SESSION['user']['pseudo'] ?? 'Utilisateur';
+        require __DIR__ . '/../View/utilisateurs/tableau_de_bord.php';
     }
 
-    // ---------------------------
-    // Supprime un utilisateur
-    // ---------------------------
-    public function destroy(): void
+    // ------ Déconnexion ------
+    public function logout()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_utilisateur'])) {
-            $id = (int)$_POST['id_utilisateur'];
-            $user = $this->repo->find($id);
+        if(session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION = [];
+        session_destroy();
 
-            if ($user) {
-                $this->repo->delete($user->getIdUtilisateur());
-                header('Location: index.php?action=index&success=3');
-                exit;
-            } else {
-                header('Location: index.php?action=index&error=Utilisateur introuvable');
-                exit;
-            }
-        }
+        header("Cache-Control: no-cache, no-store, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
 
-        // Si pas de POST, afficher la page de suppression
-        $users = $this->repo->findAll();
-        require __DIR__ . '/../View/utilisateurs/supprimer_utilisateur.php';
+        header('Location: index.php?entity=utilisateurs&action=se_connecter&message=logout');
+        exit;
     }
 }
