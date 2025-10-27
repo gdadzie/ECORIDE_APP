@@ -55,6 +55,11 @@ switch ($entity) {
             case 'se_deconnecter':
                 $controller->logout();
                 break;
+
+
+            case 'liste_utilisateurs':
+                $controller->liste();
+                break;
         }
         break;
 
@@ -70,6 +75,9 @@ switch ($entity) {
             case 'logout':
                 $controller->logout();
                 break;
+
+
+
         }
         break;
 }
