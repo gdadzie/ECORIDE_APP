@@ -1,70 +1,75 @@
 <?php
+namespace Controller;
+
+require_once __DIR__ .'/../src/Entity/Utilisateur.php';
+
+session_start(); // toujours avant tout output !
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 
-// --- Autoload Composer ---
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../Config/Database.php';
 
-// --- Controllers ---
-require_once __DIR__ . '/../src/Controller/UtilisateursController.php';
-require_once __DIR__ . '/../src/Controller/AccueilController.php';
-
+use PDO;
+use PDOException;
+use Repository\UtilisateursRepository;
 use Controller\UtilisateursController;
 use Controller\AccueilController;
 
-// --- Routing simple ---
-$entity = $_GET['entity'] ?? 'accueil'; // page d'accueil par défaut
+// Connexion PDO
+try {
+    $db = new PDO('mysql:host=localhost;dbname=ecoride_db;charset=utf8', 'root', '');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Erreur de connexion à la base : " . $e->getMessage());
+}
+
+// Création du repository
+$repo = new UtilisateursRepository($db);
+$controller = new UtilisateursController($repo);
+
+// Récupération des paramètres GET
+$entity = $_GET['entity'] ?? 'accueil';
 $action = $_GET['action'] ?? 'index';
 
 switch ($entity) {
 
     case 'utilisateurs':
-        $controller = new UtilisateursController();
+        $controller = new UtilisateursController($repo);
 
         switch ($action) {
-            case 'se_connecter':        // Formulaire de connexion : page incription.php
+            case 'creer_compte':
+                $controller->register();
+                break;
+
+            case 'se_connecter':
                 $controller->login();
                 break;
 
-            case 'creer_compte':        // Formulaire création utilisateur : page creer_utilisateur.php
-                $controller->create();
+            case 'tableau_de_bord':
+                $controller->dashboard();
                 break;
 
-            case 'modifier_utilisateur':  // Mise à jour utilisateur : page modifier_utilisateur.php
-                $controller->update();
+            case 'se_deconnecter':
+                $controller->logout();
                 break;
-
-            case 'supprimer_utilisateur': // Suppression utilisateur : page supprimer_utilisateur.php
-                $controller->destroy();
-                break;
-
-
         }
         break;
 
     case 'accueil':
+    default:
         $controller = new AccueilController();
+
         switch ($action) {
-
-            case 'index':               // Liste des utilisateurs : page index.php
-            default:
+            case 'index':
                 $controller->index();
                 break;
 
-            case 'se_connecter':        // Accède à la page d'accueil : page index.php
-                $controller->index();
-                break;
-
-            case 'contact':
-                $controller->contact();
-                break;
-
-            case 'covoiturage':
-                $controller->covoiturage();
+            case 'logout':
+                $controller->logout();
                 break;
         }
         break;
-
 }
