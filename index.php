@@ -76,6 +76,14 @@ switch ($entity) {
                 $controller->logout();
                 break;
 
+            case 'contact':
+                $controller->contact();
+                break;
+
+            case 'covoiturage':
+                $controller->covoiturage();
+                break;
+
 
 
         }
