@@ -2,6 +2,7 @@
 namespace Controller;
 
 require_once __DIR__ .'/../src/Entity/Utilisateur.php';
+require_once __DIR__ .'/../src/Entity/Covoiturage.php';
 
 session_start(); // toujours avant tout output !
 ini_set('display_errors', 1);
@@ -12,11 +13,15 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../Config/Database.php';
 
+use Config\Database;
 use PDO;
 use PDOException;
 use Repository\UtilisateursRepository;
+use Repository\CovoituragesRepository;
 use Controller\UtilisateursController;
 use Controller\AccueilController;
+use Entity\Covoiturage;
+
 
 // Connexion PDO
 try {
@@ -26,9 +31,18 @@ try {
     die("Erreur de connexion à la base : " . $e->getMessage());
 }
 
-// Création du repository
-$repo = new UtilisateursRepository($db);
-$controller = new UtilisateursController($repo);
+$db = Database::getConnection(); // ou nouveau PDO(...)
+
+
+
+/// Création des repositories
+$utilisateursRepo = new UtilisateursRepository($db);
+$covoituragesRepo = new CovoituragesRepository($db);
+
+// Création des contrôleurs
+$utilisateursController = new UtilisateursController($utilisateursRepo);
+$covoituragesController = new CovoituragesController($covoituragesRepo);
+$accueilController = new AccueilController();
 
 // Récupération des paramètres GET
 $entity = $_GET['entity'] ?? 'accueil';
@@ -37,55 +51,69 @@ $action = $_GET['action'] ?? 'index';
 switch ($entity) {
 
     case 'utilisateurs':
-        $controller = new UtilisateursController($repo);
-
         switch ($action) {
             case 'creer_compte':
-                $controller->register();
+                $utilisateursController->register();
                 break;
 
             case 'se_connecter':
-                $controller->login();
+                $utilisateursController->login();
                 break;
 
             case 'tableau_de_bord':
-                $controller->dashboard();
+                $utilisateursController->dashboard();
                 break;
 
             case 'se_deconnecter':
-                $controller->logout();
+                $utilisateursController->logout();
                 break;
 
-
             case 'liste_utilisateurs':
-                $controller->liste();
+                $utilisateursController->liste();
+                break;
+
+            case 'supprimer':  // <-- Ajout de cette ligne
+                $utilisateursController->supprimer();
+                break;
+        }
+        break;
+
+    case 'covoiturages':
+        switch ($action) {
+            case 'creer_covoiturage':
+                $covoituragesController->createCovoiturage();
+                break;
+
+            case 'rechercher_covoiturage':
+                $covoituragesController->search();
+                break;
+
+            case 'liste_covoiturages':
+                $covoituragesController->search();
                 break;
         }
         break;
 
     case 'accueil':
     default:
-        $controller = new AccueilController();
-
         switch ($action) {
             case 'index':
-                $controller->index();
+                $accueilController->index();
                 break;
 
             case 'logout':
-                $controller->logout();
+                $accueilController->logout();
                 break;
 
             case 'contact':
-                $controller->contact();
+                $accueilController->contact();
                 break;
 
             case 'covoiturage':
-                $controller->covoiturage();
+                $accueilController->covoiturage();
                 break;
-
-
-
         }
         break;
+
+
 }
