@@ -1,0 +1,33 @@
+/*  Thème global, couleurs, cartes, boutons */
+
+.theme-green { color: #00C853 !important; }             /* Texte vert émeraude */
+.bg-theme-green { background-color: #00C853 !important; } /* Fond vert émeraude */
+
+/* Boutons verts */
+.btn-theme-green {
+    background-color: #00C853;
+    border-color: #00C853;
+    color: #FFFFFF;
+    transition: 0.3s ease;
+}
+.btn-theme-green:hover {
+    background-color: #66FF99;
+    border-color: #66FF99;
+    color: #212121;
+}
+
+/* Ombres et cartes */
+.card {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+}
+.shadow-lg {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+}
+
+/* Couleurs texte */
+.text-primary { color: #212121 !important; }
+.text-secondary { color: #757575 !important; }
+
+/* Arrière-plans */
+.bg-light { background-color: #FFFFFF !important; }

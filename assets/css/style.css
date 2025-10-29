@@ -10,6 +10,8 @@ html, body {
 
 }
 
+header{ background-color: #00C853}
+
 main {
     padding-bottom: 80px; /* même hauteur que ton footer */
 }
@@ -73,7 +75,7 @@ main {
 
 input::placeholder{ font-size:10px}
 :root{
-    --ecoride-green: #28a745;
+    --ecoride-green: #00c853;
     --ecoride-dark: #1e7e34;
     --ecoride-muted: #9fcf88;
     --glass-bg: rgba(255,255,255,0.72);

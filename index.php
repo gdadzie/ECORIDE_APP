@@ -75,6 +75,10 @@ switch ($entity) {
             case 'supprimer':  // <-- Ajout de cette ligne
                 $utilisateursController->supprimer();
                 break;
+
+            case 'charte_graphique':  // <-- Ajout de cette ligne
+                $utilisateursController->charteGraphique();
+                break;
         }
         break;
 
@@ -91,6 +95,7 @@ switch ($entity) {
             case 'liste_covoiturages':
                 $covoituragesController->search();
                 break;
+
         }
         break;
 

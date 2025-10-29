@@ -1,0 +1,36 @@
+/* Contenu principal, sections, cartes */
+
+/* Conteneur principal */
+main {
+    flex: 1;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Titres de section */
+.section-title {
+    color: #00C853;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Cartes de covoiturages / contenus */
+.card {
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Bouton principal */
+.btn-main-action {
+    background-color: #00C853;
+    color: white;
+    border: none;
+}
+.btn-main-action:hover {
+    background-color: #00b34a;
+}
