@@ -30,10 +30,7 @@ class AccueilController
         require __DIR__ . '/../View/accueil/contact.php';
     }
 
-    public function covoiturage(): void
-    {
-        require __DIR__ . '/../View/covoiturages/creer_covoiturage.php';
-    }
+
 
 
 

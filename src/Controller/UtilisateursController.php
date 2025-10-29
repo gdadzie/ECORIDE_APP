@@ -5,21 +5,25 @@ use Entity\Utilisateur;
 use Config\Database;
 use PDO;
 use Repository\UtilisateursRepository;
+use Repository\CovoituragesRepository;
+use Repository\VehiculesRepository;
 use Throwable;
 
 require_once __DIR__ . '/../Entity/Utilisateur.php';
+require_once __DIR__ . '/../Entity/Covoiturage.php';
 require_once __DIR__ . '/../../Config/Database.php';
 
 class UtilisateursController
 {
     private UtilisateursRepository $repo;
+    private VehiculesRepository $vehiculeRepo;
 
     public function __construct(UtilisateursRepository $repo)
     {
         $this->repo = $repo;
     }
 
-    //--------------------  CREER UN COMPTE UTILISATEUR--------------------//
+    //--------------------  CREER UN COMPTE UTILISATEUR --------------------//
     public function register(): void
     {
         $message = '';
@@ -65,8 +69,6 @@ class UtilisateursController
     //-------------------- CONNECTION DE L'UTILISATEUR --------------------//
     public function login(): void
     {
-
-
         $message = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -85,8 +87,10 @@ class UtilisateursController
                     // Vérifie le mot de passe
                     if (password_verify($mdp, $user->getMdp())) {
 
-                        // ✅ Stocke l'objet utilisateur entier dans la session
+                        // ✅ Stocke l'utilisateur dans la session
                         $_SESSION['user'] = $user;
+                        $_SESSION['user_id'] = $user->getIdUtilisateur(); // <--- ligne ajoutée
+                        $_SESSION['pseudo'] = $user->getPseudo();
 
                         // Redirige vers le tableau de bord
                         header('Location: index.php?entity=utilisateurs&action=tableau_de_bord');
@@ -105,8 +109,6 @@ class UtilisateursController
     //-------------------- TABLEAU DE BORD --------------------//
     public function dashboard(): void
     {
-
-
         // Si pas connecté → redirection
         if (empty($_SESSION['user'])) {
             header('Location: index.php?entity=utilisateurs&action=se_connecter');
@@ -123,8 +125,6 @@ class UtilisateursController
     //-------------------- DECONNEXION --------------------//
     public function logout(): void
     {
-
-
         session_destroy();
         header('Location: index.php?entity=accueil&action=index');
         exit;
@@ -162,7 +162,7 @@ class UtilisateursController
         }
     }
 
-
+    //-------------------- SUPPRESSION D'UN UTILISATEUR --------------------//
     public function supprimer(): void
     {
         // Vérifie que l'utilisateur est connecté
@@ -192,15 +192,66 @@ class UtilisateursController
         }
     }
 
-    public function charteGraphique()
+    //-------------------- PAGE CHARTE GRAPHIQUE --------------------//
+    public function charteGraphique(): void
     {
         require_once __DIR__ . '/../View/utilisateurs/charte_graphique.php';
     }
+
+    public function profilUser(): void
+    {
+        if (empty($_SESSION['user'])) {
+            header('Location: index.php?entity=utilisateurs&action=login');
+            exit;
+        }
+
+        // ⚠️ Récupération des variables
+        $user = $_SESSION['user'];
+        $message = '';
+        $success = false;
+
+        $vehiculeRepo = new \Repository\VehiculesRepository();
+        $covoitRepo = new \Repository\CovoituragesRepository();
+
+        // --- Ajout véhicule ---
+        if (isset($_POST['add_vehicule'])) {
+            $vehicule = new \Entity\Vehicule(
+                id_utilisateur: $user->getIdUtilisateur(),
+                id_marque: (int)($_POST['id_marque'] ?? 0),
+                modele: $_POST['modele'] ?? '',
+                couleur: $_POST['couleur'] ?? '',
+                energie: $_POST['energie'] ?? '',
+                immatriculation: $_POST['immatriculation'] ?? '',
+                date_premiere_immatriculation: $_POST['date_premiere'] ?? '',
+                nb_places: (int)($_POST['nb_places'] ?? 1)
+            );
+            if ($vehiculeRepo->create($vehicule)) {
+                $message = "Véhicule ajouté avec succès.";
+                $success = true;
+            } else {
+                $message = "Erreur lors de l'ajout du véhicule.";
+            }
+        }
+
+        // --- Récupération véhicules et marques ---
+        $vehicules = $vehiculeRepo->getVehiculesByUtilisateur($user->getIdUtilisateur());
+        $marques = $vehiculeRepo->getAllMarques();
+
+        // Associer le nom de la marque aux véhicules
+        foreach ($vehicules as $v) {
+            foreach ($marques as $m) {
+                if ($m['id_marque'] == $v->getIdMarque()) {
+                    $v->setNomMarque($m['nom_marque']);
+                    break;
+                }
+            }
+        }
+
+        // --- Récupération covoiturages ---
+        $covoiturages = $covoitRepo->getCovoituragesByUtilisateur($user->getIdUtilisateur());
+
+        // --- Inclure la vue avec toutes les variables ---
+        require __DIR__ . '/../View/utilisateurs/profil_utilisateur.php';
+    }
+
 }
-
-
-
-
-
-
-

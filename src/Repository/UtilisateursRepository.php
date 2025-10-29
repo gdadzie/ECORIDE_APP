@@ -176,4 +176,43 @@ class UtilisateursRepository
 
         return $this->mapRowToUtilisateur($row);
     }
+
+
+    //-------------------- SUPPRIMER UN UTILISATEUR PAR SON ID --------------------//
+    public function delete(int $id_utilisateur): bool
+    {
+        try {
+            $stmt = $this->conn->prepare('DELETE FROM utilisateurs WHERE id_utilisateur = :id');
+            return $stmt->execute([':id' => $id_utilisateur]);
+        } catch (PDOException $e) {
+            error_log('Erreur lors de la suppression de l\'utilisateur : ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Mettre à jour les informations d'un utilisateur
+    public function updateUtilisateur(Utilisateur $user): bool
+    {
+        try {
+            $stmt = $this->conn->prepare('
+                UPDATE utilisateurs
+                SET pseudo = :pseudo,
+                    email = :email,
+                    mdp = :mdp
+                WHERE id_utilisateur = :id_utilisateur
+            ');
+
+            return $stmt->execute([
+                ':pseudo' => $user->getPseudo(),
+                ':email' => $user->getEmail(),
+                ':mdp' => $user->getMdp(),
+                ':id_utilisateur' => $user->getIdUtilisateur()
+            ]);
+
+        } catch (PDOException $e) {
+            error_log('Erreur updateUtilisateur : ' . $e->getMessage());
+            return false;
+        }
+    }
+
 }

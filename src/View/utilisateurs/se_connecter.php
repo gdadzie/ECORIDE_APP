@@ -1,81 +1,87 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion Utilisateur</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 20px;
-        }
-        form {
-            max-width: 400px;
-            margin: auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        label {
-            display: block;
-            margin-top: 15px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px;
-            width: 100%;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .error {
-            color: red;
-            margin-top: 10px;
-        }
-        .success {
-            color: green;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
+<?php include __DIR__ . '/../layout.php'; ?>
+<?php include __DIR__ . '/../partials/header.php'; ?>
 
-<h2>Connexion</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4 text-primary fw-bold">
+                        🔑 Connexion Utilisateur
+                    </h3>
 
-<?php
-// Affichage des messages d'erreur ou de succès
-if (!empty($message)) {
-    echo '<div class="'.($success ?? false ? 'success' : 'error').'">'.$message.'</div>';
-}
-?>
+                    <?php if (!empty($message)): ?>
+                        <div class="alert alert-<?= $success ?? false ? 'success' : 'danger' ?> text-center fw-semibold">
+                            <?= htmlspecialchars($message) ?>
+                        </div>
+                    <?php endif; ?>
 
-<form method="post" action="">
-    <label for="identifiant">Email ou pseudo :</label>
-    <input type="text" name="identifiant" id="identifiant" required placeholder="Votre email ou pseudo">
+                    <form method="POST" action="" class="needs-validation" novalidate>
 
-    <label for="mdp">Mot de passe :</label>
-    <input type="password" name="mdp" id="mdp" required placeholder="Votre mot de passe">
+                        <!-- Email / Pseudo -->
+                        <div class="mb-3">
+                            <label for="identifiant" class="form-label fw-semibold">Email ou pseudo</label>
+                            <input
+                                    type="text"
+                                    class="form-control"
+                                    id="identifiant"
+                                    name="identifiant"
+                                    placeholder="Votre email ou pseudo"
+                                    required
+                            >
+                            <div class="invalid-feedback">Veuillez renseigner votre email ou pseudo.</div>
+                        </div>
 
-    <button type="submit">Se connecter</button>
-    <p>Pas encore inscrit ?
-        <a href="index.php?entity=utilisateurs&action=creer_compte">Créer un compte !</a>
+                        <!-- Mot de passe -->
+                        <div class="mb-3">
+                            <label for="mdp" class="form-label fw-semibold">Mot de passe</label>
+                            <input
+                                    type="password"
+                                    class="form-control"
+                                    id="mdp"
+                                    name="mdp"
+                                    placeholder="Votre mot de passe"
+                                    required
+                            >
+                            <div class="invalid-feedback">Veuillez entrer votre mot de passe.</div>
+                        </div>
 
-    </p>
-</form>
+                        <!-- Bouton Connexion -->
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+                            </button>
+                        </div>
 
-</body>
-</html>
+                        <!-- Lien vers inscription -->
+                        <p class="text-center mb-0">
+                            Pas encore inscrit ?
+                            <a href="index.php?entity=utilisateurs&action=creer_compte" class="text-decoration-none fw-semibold">
+                                Créer un compte
+                            </a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Bootstrap 5 validation
+    (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+
+<?php include __DIR__ . '/../partials/footer.php'; ?>
