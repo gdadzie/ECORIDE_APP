@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription Utilisateur - EcoRide</title>
+<?php include __DIR__ . '/../layout.php'; ?>
+<?php include __DIR__ . '/../partials/header.php'; ?>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -98,7 +94,7 @@
         }
 
     </style>
-</head>
+
 <body>
 
 <h2>Créer un compte utilisateur</h2>
@@ -110,7 +106,7 @@ if (!empty($message)) {
 }
 ?>
 
-<form method="post" action="index.php?entity=utilisateurs&action=creer_compte">
+<form method="post" action="../utilisateurs/index.php?entity=utilisateurs&action=creer_compte">
     <label for="pseudo">Pseudo :</label>
     <input type="text" name="pseudo" id="pseudo" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" placeholder="Ex : John_Doe">
 
@@ -125,8 +121,9 @@ if (!empty($message)) {
 
 <!-- Bouton vers la page d'accueil -->
 <div style="text-align:center;">
-    <a href="index.php" class="btn-home">Retour à l'accueil</a>
+    <a href="../utilisateurs/index.php" class="btn-home">Retour à l'accueil</a>
 </div>
 
 </body>
-</html>
+<?php include __DIR__ . '/../partials/footer.php'; ?>
+

@@ -20,9 +20,9 @@
 
     <body class="d-flex flex-column min-vh-100">
 
-        <?php include __DIR__ . '/../partials/header.php'; ?>
-        <?php include __DIR__ . '/../partials/main.php'; ?>
-        <?php include __DIR__ . '/../partials/footer.php'; ?>
+        <?php include __DIR__ . '/../../partials/header.php'; ?>
+        <?php include __DIR__ . '/../../partials/main.php'; ?>
+        <?php include __DIR__ . '/../../partials/footer.php'; ?>
 
         <!-- SCRIPT JAVASCRIPT -->
         <script src="assets/js/bootstrap.js"></script>
