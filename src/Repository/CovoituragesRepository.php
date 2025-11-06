@@ -8,13 +8,21 @@ use PDOException;
 
 class CovoituragesRepository
 {
-    private PDO $conn;
+    private ?PDO $conn =null ;
+
     private ?string $lastError = null;
+
 
     public function __construct()
     {
         $this->conn = Database::getConnection();
+
+        if (!$this->conn) {
+            $error = Database::getLastError() ?? "Connexion à la base de données impossible.";
+            throw new \RuntimeException($error);
+        }
     }
+
 
     // Créer un covoiturage
     public function create(Covoiturage $covoiturage): bool
@@ -69,5 +77,45 @@ class CovoituragesRepository
     public function getLastError(): ?string
     {
         return $this->lastError;
+    }
+
+    public function filterByEcologique(int $ecologique): array
+    {
+        $stmt = $this->conn->prepare("
+        SELECT *
+        FROM covoiturages
+        WHERE ecologique = :ecologique
+    ");
+        $stmt->execute(['ecologique' => $ecologique]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    public function filterByPrixMax(float $prixMax): array
+    {
+        $stmt = $this->conn->prepare("
+            SELECT *
+            FROM covoiturages
+            WHERE prix <= :prixMax
+            ORDER BY prix 
+        ");
+
+        $stmt->execute([':prixMax' => $prixMax]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function filterByDureeMax(int $dureeMax): array
+    {
+        $stmt = $this->conn->prepare("
+            SELECT *
+            FROM covoiturages
+            WHERE duree_minutes <= :dureeMax
+            ORDER BY covoiturages.duree_minutes 
+        ");
+
+        $stmt->execute([':dureeMax' => $dureeMax]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

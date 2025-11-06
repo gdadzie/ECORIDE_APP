@@ -1,98 +1,87 @@
 <?php
-
 namespace Controller;
 
 use Config\Database;
 use Entity\Covoiturage;
 use Repository\CovoituragesRepository;
+use Repository\UtilisateursRepository;
 use Repository\VehiculesRepository;
 use PDO;
-use PDOException;
 
 class CovoituragesController
 {
     private CovoituragesRepository $repo;
-    private VehiculesRepository $vehiculeRepo;
-    private PDO $pdo;
+    private UtilisateursRepository $utilisateursRepo;
+    private VehiculesRepository $vehiculesRepo;
+    private PDO $conn;
 
-    public function __construct(CovoituragesRepository $repo)
-    {
+    public function __construct(
+        CovoituragesRepository $repo,
+        UtilisateursRepository $utilisateursRepo,
+        VehiculesRepository $vehiculesRepo
+    ) {
         $this->repo = $repo;
-        $this->vehiculeRepo = new VehiculesRepository(); // ✅ Initialisation
-        $this->pdo = Database::getConnection();
+        $this->utilisateursRepo = $utilisateursRepo;
+        $this->vehiculesRepo = $vehiculesRepo;
+        $this->conn = Database::getConnection();
     }
 
-    // Créer un nouveau covoiturage
-    public function createCovoiturage(): void
+    public function createCovoiturage()
     {
-        $message = '';
-        $success = false;
-
-        // Vérification utilisateur connecté
-        if (empty($_SESSION['user'])) {
-            header('Location: /index.php?entity=utilisateurs&action=se_connecter');
+        $userId = $_SESSION['user_id'] ?? null;
+        if (!$userId) {
+            header('Location: index.php?entity=accueil&action=connexion');
             exit;
         }
 
-        $user = $_SESSION['user'];
-        $user_id = $user->getIdUtilisateur();
-
-        // Récupérer tous les véhicules de l'utilisateur
-        $vehicules = $this->vehiculeRepo->getVehiculesByUtilisateur($user_id);
-
-        // Récupérer toutes les villes pour autocomplete
-        $stmt = $this->pdo->query("SELECT nom_ville FROM villes ORDER BY nom_ville ASC");
-        $villes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $ville_depart = trim($_POST['ville_depart'] ?? '');
-            $ville_arrivee = trim($_POST['ville_arrivee'] ?? '');
-            $date_depart = trim($_POST['date_depart'] ?? '');
-            $heure_depart = trim($_POST['heure_depart'] ?? '');
-            $nb_places = (int)($_POST['nb_places'] ?? 0);
-            $ecologique = isset($_POST['ecologique']);
-            $vehicule_id = (int)($_POST['vehicule_id'] ?? 0);
-
-            // Validation simple
-            if ($ville_depart === '' || $ville_arrivee === '' || $date_depart === '' || $heure_depart === '' || $nb_places <= 0 || $vehicule_id <= 0) {
-                $message = "⚠️ Veuillez remplir tous les champs correctement et sélectionner un véhicule.";
-            } else {
-                $ville_depart_id = $this->getVilleIdByName($ville_depart);
-                $ville_arrivee_id = $this->getVilleIdByName($ville_arrivee);
-
-                if ($ville_depart_id === null || $ville_arrivee_id === null) {
-                    $message = "⚠️ Une ou plusieurs villes sont invalides.";
-                } else {
-                    $distance_km = $this->calculDistance($ville_depart, $ville_arrivee);
-
-                    $covoiturage = new Covoiturage(
-                        id_utilisateur: $user_id,
-                        id_vehicule: $vehicule_id,
-                        ville_depart: $ville_depart_id,
-                        ville_arrivee: $ville_arrivee_id,
-                        date_depart: $date_depart,
-                        heure_depart: $heure_depart,
-                        distance_km: $distance_km,
-                        nb_places: $nb_places,
-                        ecologique: $ecologique
-                    );
-
-                    $result = $this->repo->create($covoiturage);
-
-                    if ($result) {
-                        $message = "✅ Covoiturage créé avec succès !";
-                        $success = true;
-                    } else {
-                        $errorInfo = $this->repo->getLastError();
-                        $message = "⚠️ Erreur lors de la création du covoiturage : $errorInfo";
-                    }
-                }
-            }
+        $user = $this->utilisateursRepo->findById($userId);
+        if (!$user) {
+            session_destroy();
+            header('Location: index.php?entity=accueil&action=connexion');
+            exit;
         }
 
-        // Appel de la vue
-        require __DIR__ . '/../View/covoiturages/creer_covoiturage.php';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $villeDepart  = $_POST['ville_depart'] ?? '';
+            $villeArrivee = $_POST['ville_arrivee'] ?? '';
+            $dateDepart   = $_POST['date_depart'] ?? '';
+            $heureDepart  = $_POST['heure_depart'] ?? '';
+            $distanceKm   = (float) ($_POST['distance_km'] ?? 0);
+            $prix         = (float) ($_POST['prix'] ?? 0);
+            $nbPlaces     = (int) ($_POST['nb_places'] ?? 1);
+            $ecologique   = isset($_POST['ecologique']);
+            $dureeMinutes = (int) ($_POST['duree_minutes'] ?? 0);
+            $vehiculeId   = (int) ($_POST['id_vehicule'] ?? 0);
+
+            $covoiturage = new Covoiturage(
+                $user->getIdUtilisateur(),
+                $vehiculeId,
+                $villeDepart,
+                $villeArrivee,
+                $dateDepart,
+                $heureDepart,
+                $distanceKm,
+                $prix,
+                $nbPlaces,
+                $ecologique,
+                $dureeMinutes,
+                'prévu'
+            );
+
+            $success = $this->repo->create($covoiturage);
+
+            if ($success) {
+                header('Location: index.php?entity=covoiturages&action=liste_covoiturages');
+                exit;
+            } else {
+                $error = $this->repo->getLastError();
+                include __DIR__ . '/../View/erreur_covoiturage.php';
+            }
+        } else {
+            require_once __DIR__ . '/../View/utilisateurs/creer_covoiturage.php';
+        }
     }
+
 
     // Autocomplete pour les villes
     public function autocompleteVilles(): void
@@ -103,7 +92,7 @@ class CovoituragesController
             return;
         }
 
-        $stmt = $this->pdo->prepare("SELECT nom_ville FROM villes WHERE nom_ville LIKE :term LIMIT 10");
+        $stmt = $this->conn->prepare("SELECT nom_ville FROM villes WHERE nom_ville LIKE :term LIMIT 10");
         $stmt->execute([':term' => $term . '%']);
         $villes = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
@@ -119,7 +108,7 @@ class CovoituragesController
     // Récupérer l'ID d'une ville par son nom
     private function getVilleIdByName(string $nom): ?int
     {
-        $stmt = $this->pdo->prepare("SELECT id_ville FROM villes WHERE nom_ville = :nom_ville");
+        $stmt = $this->conn->prepare("SELECT id_ville FROM villes WHERE nom_ville = :nom_ville");
         $stmt->execute([':nom_ville' => $nom]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? (int)$row['id_ville'] : null;
@@ -130,4 +119,17 @@ class CovoituragesController
     {
         return $this->repo->getCovoituragesByUtilisateur($userId);
     }
+
+    public function listeCovoituragesByEcologique(): void
+    {
+        // On récupère la valeur passée dans l’URL, par défaut 1 (écologique).
+        $ecologique = isset($_GET['ecologique']) ? (int)$_GET['ecologique'] : 1;
+
+        // On appelle le repository avec cette valeur
+        $covoiturages = $this->repo->filterByEcologique($ecologique);
+
+        // On inclut la vue et on lui donne accès à la variable $covoiturages
+        require_once __DIR__ . '/../View/utilisateurs/liste_covoiturages.php';
+    }
+
 }

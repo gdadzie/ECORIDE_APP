@@ -1,3 +1,4 @@
+
 <?php include __DIR__ . '/../layout.php'; ?>
 <?php include __DIR__ . '/../partials/header.php'; ?>
 
@@ -16,7 +17,7 @@
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST" action="" class="needs-validation" novalidate>
+                    <form method="POST" action="index.php?entity=utilisateurs&action=se_connecter" class="needs-validation" novalidate>
 
                         <!-- Email / Pseudo -->
                         <div class="mb-3">

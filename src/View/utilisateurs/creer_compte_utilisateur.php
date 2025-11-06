@@ -106,7 +106,7 @@ if (!empty($message)) {
 }
 ?>
 
-<form method="post" action="../utilisateurs/index.php?entity=utilisateurs&action=creer_compte">
+<form method="post" action="index.php?entity=utilisateurs&action=creer_compte">
     <label for="pseudo">Pseudo :</label>
     <input type="text" name="pseudo" id="pseudo" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" placeholder="Ex : John_Doe">
 
@@ -121,7 +121,7 @@ if (!empty($message)) {
 
 <!-- Bouton vers la page d'accueil -->
 <div style="text-align:center;">
-    <a href="../utilisateurs/index.php" class="btn-home">Retour à l'accueil</a>
+    <a href="index.php" class="btn-home">Retour à l'accueil</a>
 </div>
 
 </body>

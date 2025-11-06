@@ -110,7 +110,7 @@ class UtilisateursRepository
             $actif,
             $photo,
             $dateCreation,
-              // Assurez-vous que votre constructeur accepte ce paramètre à la fin
+        // Assurez-vous que votre constructeur accepte ce paramètre à la fin
         );
 
         // On assigne l'ID utilisateur
@@ -213,6 +213,46 @@ class UtilisateursRepository
             error_log('Erreur updateUtilisateur : ' . $e->getMessage());
             return false;
         }
+    }
+
+    public function findById(int $id): ?Utilisateur
+    {
+        try {
+            $stmt = $this->conn->prepare("SELECT * FROM utilisateurs WHERE id_utilisateur = :id");
+            $stmt->execute([':id' => $id]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($data) {
+                $user = new Utilisateur(
+                    $data['nom'] ?? '',
+                    $data['prenom'] ?? '',
+                    $data['pseudo'] ?? '',
+                    $data['email'] ?? '',
+                    $data['telephone'] ?? '',
+                    $data['mdp'] ?? '',
+                    $data['role'] ?? 'user',
+                    $data['type_covoiturage'] ?? 'passager',
+                    $data['actif'] ?? 1,
+                    $data['photo'] ?? '',
+                    $data['date_creation'] ?? ''
+                );
+
+                $user->setIdUtilisateur((int)$data['id_utilisateur']);
+
+                return $user;
+            }
+
+            return null;
+        } catch (PDOException $e) {
+            $this->lastError = $e->getMessage();
+            error_log("Erreur findById Utilisateur : " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
     }
 
 }

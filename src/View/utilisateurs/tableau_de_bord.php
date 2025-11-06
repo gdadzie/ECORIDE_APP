@@ -20,11 +20,14 @@ $userPseudo = is_object($user) ? $user->getPseudo() : ($user['pseudo'] ?? 'Utili
 <head>
     <meta charset="UTF-8">
     <title>Tableau de bord</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="/assets/css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link  rel="stylesheet" href="/assets/css/tableau_de_bord.css">
+
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f5f8f6; }
-        .dashboard-header { text-align: center; margin-top: 40px; margin-bottom: 50px; }
-        .dashboard-header h2 { color: #198754; font-weight: 700; }
+        .dashboard-header { text-align: center; margin-top: 120px; margin-bottom: 50px; }
+        .dashboard-header h2 { color: #198754; font-weight: 700;  }
         .dashboard-header p { font-size: 18px; color: #333; }
         .card-dashboard { border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); transition: transform 0.2s ease-in-out; }
         .card-dashboard:hover { transform: translateY(-5px); }
@@ -34,13 +37,17 @@ $userPseudo = is_object($user) ? $user->getPseudo() : ($user['pseudo'] ?? 'Utili
         .card-dashboard .btn { margin-top: 15px; }
         .dashboard-container { max-width: 1200px; margin: auto; }
     </style>
+
+
 </head>
+<?php include __DIR__ . '/../partials/header.php'; ?>
+
 <body>
 
 <div class="container dashboard-container">
-    <div class="dashboard-header">
-        <h2>Bienvenue, <?= htmlspecialchars($userPseudo) ?> !</h2>
-        <p>Voici votre tableau de bord. Accédez aux différentes fonctionnalités ci-dessous.</p>
+    <div class="dashboard-header" >
+        <h2 >Bienvenue, <?= htmlspecialchars($userPseudo) ?> !</h2>
+        <p>Tes covoitureurs t’attendent déjà ! En route pour de nouvelles aventures ?</p>
         <a href="index.php?entity=accueil&action=logout" class="btn btn-outline-success mt-3">Se déconnecter</a>
     </div>
 
@@ -79,7 +86,7 @@ $userPseudo = is_object($user) ? $user->getPseudo() : ($user['pseudo'] ?? 'Utili
                     <img src="https://img.icons8.com/color/96/000000/search--v1.png" alt="Rechercher un Covoiturage"/>
                     <h5>Rechercher un covoiturage</h5>
                     <p>Trouvez un covoiturage correspondant à vos besoins et réservez votre place.</p>
-                    <a href="index.php?entity=covoiturages&action=rechercher_covoiturage" class="btn btn-success">Rechercher</a>
+                    <a href="index.php?entity=accueil&action=covoiturages" class="btn btn-success">Rechercher</a>
                 </div>
             </div>
         </div>
@@ -113,4 +120,5 @@ $userPseudo = is_object($user) ? $user->getPseudo() : ($user['pseudo'] ?? 'Utili
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+<?php include __DIR__ . '/../partials/footer.php'; ?>
 </html>

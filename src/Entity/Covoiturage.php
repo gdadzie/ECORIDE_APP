@@ -16,6 +16,7 @@ class Covoiturage
     private int $nb_places;
     private bool $ecologique;
     private string $statut;
+    private string $duree_minutes;
 
     public function __construct(
         int $id_utilisateur,
@@ -25,9 +26,12 @@ class Covoiturage
         string $date_depart,
         string $heure_depart,
         float $distance_km,
+        float $prix,
         int $nb_places,
         bool $ecologique,
+        int $duree_minutes,
         string $statut = 'prévu'
+
     ) {
         $this->id_utilisateur = $id_utilisateur;
         $this->id_vehicule = $id_vehicule;
@@ -36,12 +40,13 @@ class Covoiturage
         $this->date_depart = $date_depart;
         $this->heure_depart = $heure_depart;
         $this->distance_km = $distance_km;
+        $this->prix = $prix;
         $this->nb_places = $nb_places;
         $this->ecologique = $ecologique;
+        $this->duree_minutes = $duree_minutes;
         $this->statut = $statut;
 
-        // Calcul automatique du prix côté PHP
-        $this->prix = $this->calculPrix();
+
     }
 
     // --- Getters ---
@@ -60,21 +65,10 @@ class Covoiturage
 
     // --- Setters ---
     public function setIdCovoiturage(int $id): void { $this->id_covoiturage = $id; }
+    public function setPrix(float $prix): void { $this->prix = $prix; }
     public function setNbPlaces(int $nb): void { $this->nb_places = $nb; }
     public function setEcologique(bool $eco): void { $this->ecologique = $eco; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
 
-    // --- Calcul du prix ---
-    private function calculPrix(): float
-    {
-        // Exemple : 0,5 €/km, +20% si non écologique
-        $tarif_km = 0.5;
-        $prix = $this->distance_km * $tarif_km;
 
-        if (!$this->ecologique) {
-            $prix *= 1.2;
-        }
-
-        return round($prix, 2);
-    }
 }

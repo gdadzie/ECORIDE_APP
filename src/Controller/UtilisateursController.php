@@ -1,9 +1,11 @@
 <?php
 namespace Controller;
 
+use AllowDynamicProperties;
 use Entity\Utilisateur;
 use Config\Database;
 use PDO;
+use PDOException;
 use Repository\UtilisateursRepository;
 use Repository\CovoituragesRepository;
 use Repository\VehiculesRepository;
@@ -11,16 +13,21 @@ use Throwable;
 
 require_once __DIR__ . '/../Entity/Utilisateur.php';
 require_once __DIR__ . '/../Entity/Covoiturage.php';
+require_once __DIR__ . '/../Entity/Vehicule.php';
 require_once __DIR__ . '/../../Config/Database.php';
 
+#[AllowDynamicProperties]
 class UtilisateursController
 {
     private UtilisateursRepository $repo;
     private VehiculesRepository $vehiculeRepo;
 
-    public function __construct(UtilisateursRepository $repo)
+    private ?PDO $conn = null;
+
+    public function __construct(UtilisateursRepository $repo, VehiculesRepository $vehiculeRepo)
     {
         $this->repo = $repo;
+        $this->vehiculeRepo = $vehiculeRepo;
     }
 
     //--------------------  CREER UN COMPTE UTILISATEUR --------------------//
@@ -200,58 +207,124 @@ class UtilisateursController
 
     public function profilUser(): void
     {
+        // 🔹 Vérifie si l'utilisateur est connecté
         if (empty($_SESSION['user'])) {
             header('Location: index.php?entity=utilisateurs&action=login');
             exit;
         }
 
-        // ⚠️ Récupération des variables
         $user = $_SESSION['user'];
+
+        // 🔹 Initialisation des messages
         $message = '';
         $success = false;
 
-        $vehiculeRepo = new \Repository\VehiculesRepository();
-        $covoitRepo = new \Repository\CovoituragesRepository();
+        // 🔹 Couleurs et énergies disponibles pour le formulaire
+        $couleurs = ['Noir', 'Blanc', 'Gris', 'Rouge', 'Bleu', 'Vert', 'Jaune', 'Autre'];
+        $energies = ['Essence', 'Diesel', 'Électrique', 'Hybride', 'GPL', 'Autre'];
 
-        // --- Ajout véhicule ---
-        if (isset($_POST['add_vehicule'])) {
-            $vehicule = new \Entity\Vehicule(
-                id_utilisateur: $user->getIdUtilisateur(),
-                id_marque: (int)($_POST['id_marque'] ?? 0),
-                modele: $_POST['modele'] ?? '',
-                couleur: $_POST['couleur'] ?? '',
-                energie: $_POST['energie'] ?? '',
-                immatriculation: $_POST['immatriculation'] ?? '',
-                date_premiere_immatriculation: $_POST['date_premiere'] ?? '',
-                nb_places: (int)($_POST['nb_places'] ?? 1)
-            );
-            if ($vehiculeRepo->create($vehicule)) {
-                $message = "Véhicule ajouté avec succès.";
-                $success = true;
+        // 🔹 Traitement du formulaire d’ajout de véhicule
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle'])) {
+
+            $data = [
+                'id_utilisateur' => $user->getIdUtilisateur(),
+                'id_marque' => (int)($_POST['id_marque'] ?? 0),
+                'modele' => trim($_POST['modele'] ?? ''),
+                'couleur' => trim($_POST['couleur'] ?? ''),
+                'energie' => trim($_POST['energie'] ?? ''),
+                'nb_places' => (int)($_POST['nb_places'] ?? 1),
+                'immatriculation' => trim($_POST['immatriculation'] ?? ''),
+                'date_premiere_immatriculation' => trim($_POST['date_premiere_immatriculation'] ?? '')
+            ];
+
+            // 🔹 Validation des champs obligatoires
+            if (
+                empty($data['id_marque']) || empty($data['modele']) || empty($data['couleur']) ||
+                empty($data['energie']) || empty($data['immatriculation']) || empty($data['date_premiere_immatriculation'])
+            ) {
+                $message = "❌ Veuillez remplir tous les champs obligatoires.";
             } else {
-                $message = "Erreur lors de l'ajout du véhicule.";
-            }
-        }
-
-        // --- Récupération véhicules et marques ---
-        $vehicules = $vehiculeRepo->getVehiculesByUtilisateur($user->getIdUtilisateur());
-        $marques = $vehiculeRepo->getAllMarques();
-
-        // Associer le nom de la marque aux véhicules
-        foreach ($vehicules as $v) {
-            foreach ($marques as $m) {
-                if ($m['id_marque'] == $v->getIdMarque()) {
-                    $v->setNomMarque($m['nom_marque']);
-                    break;
+                if ($this->vehiculeRepo->addVehicule($data)) {
+                    $success = true;
+                    $message = "✅ Véhicule <strong>" . htmlspecialchars($data['modele']) . "</strong> ajouté avec succès !";
+                } else {
+                    $success = false;
+                    $message = "❌ Erreur lors de l’ajout du véhicule.";
                 }
             }
         }
 
-        // --- Récupération covoiturages ---
+        // 🔹 Récupération des véhicules existants pour l'utilisateur
+        $vehicules = $this->vehiculeRepo->getVehiculesByUtilisateur($user->getIdUtilisateur());
+
+        // 🔹 Si tu as un repo de covoiturages passé au contrôleur
+        $covoitRepo = new \Repository\CovoituragesRepository(); // ou mieux : injecte-le via le constructeur
         $covoiturages = $covoitRepo->getCovoituragesByUtilisateur($user->getIdUtilisateur());
 
-        // --- Inclure la vue avec toutes les variables ---
-        require __DIR__ . '/../View/utilisateurs/profil_utilisateur.php';
+        // 🔹 Préparer les variables pour la vue
+        $viewData = [
+            'vehicules'    => $vehicules,
+            'covoiturages' => $covoiturages,
+            'couleurs'     => $couleurs,
+            'energies'     => $energies,
+            'success'      => $success,
+            'message'      => $message,
+            'user'         => $user
+        ];
+
+        // 🔹 Extraire les variables pour la vue
+        extract($viewData);
+
+        // 🔹 Inclure la vue
+        require_once __DIR__ . '/../View/utilisateurs/profil_utilisateur.php';
     }
+
+
+
+
+
+    public function findById(int $id): ?Utilisateur
+    {
+        try {
+            $stmt = $this->conn->prepare("SELECT * FROM utilisateurs WHERE id_utilisateur = :id");
+            $stmt->execute([':id' => $id]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($data) {
+                $user = new Utilisateur(
+                    $data['nom'] ?? '',
+                    $data['prenom'] ?? '',
+                    $data['pseudo'] ?? '',
+                    $data['email'] ?? '',
+                    $data['telephone'] ?? '',
+                    $data['mdp'] ?? '',
+                    $data['role'] ?? 'user',
+                    $data['type_covoiturage'] ?? 'passager',
+                    $data['actif'] ?? 1,
+                    $data['photo'] ?? '',
+                    $data['date_creation'] ?? ''
+                );
+
+                $user->setIdUtilisateur((int)$data['id_utilisateur']);
+
+                return $user;
+            }
+
+            return null;
+        } catch (PDOException $e) {
+            $this->lastError = $e->getMessage();
+            error_log("Erreur findById Utilisateur : " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
+
+
+
 
 }

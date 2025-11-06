@@ -6,7 +6,7 @@ class Vehicule
     private ?int $id_vehicule;
     private ?int $id_utilisateur;
     private ?int $id_marque;
-    private ?string $nom_marque = null; // nouveau champ pour afficher le nom
+    private ?string $nom_marque = null;
     private ?string $modele;
     private ?string $couleur;
     private ?string $energie;
