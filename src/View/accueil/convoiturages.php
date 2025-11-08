@@ -53,8 +53,8 @@
             <button type="submit" class="btn btn-search">
                 <i class="bi bi-search"></i> Rechercher
             </button>
-            <button onclick="window.history.back()" type="button" class="btn btn-secondary btn-retour">
-                <i class="bi bi-return"></i> Retour
+            <button onclick="window.history.back()" class="btn btn-secondary btn-retour">
+                <i class="bi bi-search"></i> Rechercher
             </button>
         </div>
     </form>

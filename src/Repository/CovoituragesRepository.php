@@ -31,10 +31,10 @@ class CovoituragesRepository
             $stmt = $this->conn->prepare('
                 INSERT INTO covoiturages 
                 (id_utilisateur, id_vehicule, ville_depart, ville_arrivee, date_depart,
-                 heure_depart, distance_km, nb_places, ecologique, statut)
+                 heure_depart, distance_km,prix, nb_places, ecologique, statut)
                 VALUES 
                 (:id_utilisateur, :id_vehicule, :ville_depart, :ville_arrivee, :date_depart,
-                 :heure_depart, :distance_km, :nb_places, :ecologique, :statut)
+                 :heure_depart, :distance_km,:prix, :nb_places, :ecologique, :statut)
             ');
 
             return $stmt->execute([
@@ -45,6 +45,7 @@ class CovoituragesRepository
                 ':date_depart' => $covoiturage->getDateDepart(),
                 ':heure_depart' => $covoiturage->getHeureDepart(),
                 ':distance_km' => $covoiturage->getDistanceKm(),
+                ':prix' => $covoiturage->getPrix(),
                 ':nb_places' => $covoiturage->getNbPlaces(),
                 ':ecologique' => $covoiturage->isEcologique(),
                 ':statut' => $covoiturage->getStatut(),

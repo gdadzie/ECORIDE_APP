@@ -7,33 +7,39 @@ use Repository\CovoituragesRepository;
 use Repository\UtilisateursRepository;
 use Repository\VehiculesRepository;
 use PDO;
+use Repository\VillesRepository;
 
 class CovoituragesController
 {
     private CovoituragesRepository $repo;
     private UtilisateursRepository $utilisateursRepo;
     private VehiculesRepository $vehiculesRepo;
+    private VillesRepository    $villesRepo;
     private PDO $conn;
 
     public function __construct(
         CovoituragesRepository $repo,
         UtilisateursRepository $utilisateursRepo,
-        VehiculesRepository $vehiculesRepo
+        VehiculesRepository $vehiculesRepo,
+        VillesRepository $villesRepo,
     ) {
         $this->repo = $repo;
         $this->utilisateursRepo = $utilisateursRepo;
         $this->vehiculesRepo = $vehiculesRepo;
+        $this->villesRepo = $villesRepo;
         $this->conn = Database::getConnection();
     }
 
     public function createCovoiturage()
     {
+        // 🔒 Vérification de la session utilisateur
         $userId = $_SESSION['user_id'] ?? null;
         if (!$userId) {
             header('Location: index.php?entity=accueil&action=connexion');
             exit;
         }
 
+        // 🔹 Récupération de l'utilisateur connecté
         $user = $this->utilisateursRepo->findById($userId);
         if (!$user) {
             session_destroy();
@@ -41,9 +47,19 @@ class CovoituragesController
             exit;
         }
 
+        // 🔹 Récupération des véhicules et des villes depuis la base
+        $vehicules = $this->vehiculesRepo->getVehiculesByUtilisateur($user->getIdUtilisateur());
+
+        // On récupère toutes les villes (id + nom) pour la vue
+        $stmt = $this->conn->query("SELECT id_ville, nom_ville FROM villes ORDER BY nom_ville ASC");
+        $villes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 🔹 Si le formulaire a été soumis
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $villeDepart  = $_POST['ville_depart'] ?? '';
-            $villeArrivee = $_POST['ville_arrivee'] ?? '';
+
+            // On récupère et on sécurise les données
+            $villeDepart  = (int) ($_POST['ville_depart'] ?? 0);
+            $villeArrivee = (int) ($_POST['ville_arrivee'] ?? 0);
             $dateDepart   = $_POST['date_depart'] ?? '';
             $heureDepart  = $_POST['heure_depart'] ?? '';
             $distanceKm   = (float) ($_POST['distance_km'] ?? 0);
@@ -53,34 +69,42 @@ class CovoituragesController
             $dureeMinutes = (int) ($_POST['duree_minutes'] ?? 0);
             $vehiculeId   = (int) ($_POST['id_vehicule'] ?? 0);
 
-            $covoiturage = new Covoiturage(
-                $user->getIdUtilisateur(),
-                $vehiculeId,
-                $villeDepart,
-                $villeArrivee,
-                $dateDepart,
-                $heureDepart,
-                $distanceKm,
-                $prix,
-                $nbPlaces,
-                $ecologique,
-                $dureeMinutes,
-                'prévu'
-            );
-
-            $success = $this->repo->create($covoiturage);
-
-            if ($success) {
-                header('Location: index.php?entity=covoiturages&action=liste_covoiturages');
-                exit;
+            // Validation minimale
+            if ($villeDepart === 0 || $villeArrivee === 0 || empty($dateDepart) || empty($heureDepart)) {
+                $error = "Veuillez remplir tous les champs obligatoires.";
             } else {
-                $error = $this->repo->getLastError();
-                include __DIR__ . '/../View/erreur_covoiturage.php';
+                // 🔹 Création de l'objet Covoiturage
+                $covoiturage = new Covoiturage(
+                    $user->getIdUtilisateur(),
+                    $vehiculeId,
+                    $villeDepart,
+                    $villeArrivee,
+                    $dateDepart,
+                    $heureDepart,
+                    $distanceKm,
+                    $prix,
+                    $nbPlaces,
+                    $ecologique,
+                    $dureeMinutes,
+                    'prévu' // statut initial
+                );
+
+                // 🔹 Enregistrement en base via le repository
+                $success = $this->repo->create($covoiturage);
+
+                if ($success) {
+                    $successMsg = "✅ Covoiturage créé avec succès !";
+                } else {
+                    $error = $this->repo->getLastError() ?? "❌ Erreur lors de la création du covoiturage.";
+                }
             }
-        } else {
-            require_once __DIR__ . '/../View/utilisateurs/creer_covoiturage.php';
         }
+
+        // 🔹 Inclusion de la vue avec les données nécessaires
+        require_once __DIR__ . '/../View/utilisateurs/creer_covoiturage.php';
     }
+
+
 
 
     // Autocomplete pour les villes
