@@ -1,75 +1,131 @@
-<main class="flex-grow-1 container my-5">
-    <h2 class="text-center theme-green mb-4">🚗 Covoiturages disponibles</h2>
+<?php
+include __DIR__ . '/../layout.php';
+include __DIR__ . '/../partials/header.php';
 
-    <?php if (empty($covoiturages)): ?>
-        <div class="alert alert-warning text-center">
-            Aucun covoiturage disponible pour le moment.
-        </div>
-    <?php else: ?>
-        <div class="row g-4">
-            <?php foreach ($covoiturages as $covoit): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card shadow-lg h-100">
-                        <div class="card-body d-flex flex-column">
-                            <!-- Header avec villes -->
-                            <h5 class="card-title theme-green mb-2">
-                                <?= htmlspecialchars($covoit['ville_depart']) ?> ➜ <?= htmlspecialchars($covoit['ville_arrivee']) ?>
-                            </h5>
-                            <p class="card-subtitle mb-3 text-muted">
-                                Départ : <?= htmlspecialchars($covoit['date_depart']) ?> à <?= htmlspecialchars($covoit['heure_depart']) ?>
-                            </p>
+// 🔹 Guard pour éviter "Undefined variable"
+if (!isset($covoiturages)) {
+    $covoiturages = [];
+}
+?>
 
-                            <!-- Infos covoiturage -->
-                            <ul class="list-unstyled flex-grow-1 mb-3">
-                                <li>
-                                    <i class="bi bi-currency-euro"></i>
-                                    <strong>Prix :</strong> <?= htmlspecialchars($covoit['prix']) ?> €
-                                </li>
-                                <li>
-                                    <i class="bi bi-clock"></i>
-                                    <strong>Durée :</strong> <?= htmlspecialchars($covoit['duree_minutes'] ?? 'N/A') ?> min
-                                </li>
-                                <li>
-                                    <i class="bi bi-car-front"></i>
-                                    <strong>Distance :</strong> <?= htmlspecialchars($covoit['distance_km']) ?> km
-                                </li>
-                                <li>
-                                    <i class="bi bi-people"></i>
-                                    <strong>Places :</strong> <?= htmlspecialchars($covoit['nb_places']) ?>
-                                </li>
-                                <?php if ($covoit['ecologique']): ?>
-                                    <li class="text-success">
-                                        🌱 Trajet écologique
-                                    </li>
-                                <?php endif; ?>
-                            </ul>
+<style>
+    .covoiturages-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
 
-                            <!-- Conducteur -->
-                            <div class="mt-3 d-flex align-items-center">
-                                <?php
-                                $avatarPath = "/assets/images/avatars/" . htmlspecialchars($covoit['id_utilisateur']) . ".png";
-                                if(file_exists(__DIR__ . "/../../assets/images/avatars/" . $covoit['id_utilisateur'] . ".png")):
-                                    ?>
-                                    <img src="<?= $avatarPath ?>" alt="Avatar conducteur" class="rounded-circle me-2" width="40" height="40">
-                                <?php else: ?>
-                                    <div class="avatar-fallback me-2">
-                                        <?= strtoupper(substr($covoit['nom_utilisateur'] ?? 'A',0,1)) ?>
-                                    </div>
-                                <?php endif; ?>
-                                <span><?= htmlspecialchars($covoit['nom_utilisateur'] ?? 'Anonyme') ?></span>
-                            </div>
+    .covoiturage-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s ease-in-out;
+    }
 
-                            <!-- Bouton réservation / détails -->
-                            <div class="mt-3 text-center">
-                                <a href="index.php?entity=covoiturages&action=details&id=<?= $covoit['id_covoiturage'] ?>"
-                                   class="btn btn-theme-green w-75">
-                                    Voir le covoiturage
-                                </a>
-                            </div>
-                        </div>
+    .covoiturage-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #198754;
+    }
+
+    .card-header .ville {
+        text-transform: capitalize;
+    }
+
+    .card-body p {
+        margin: 5px 0;
+        font-size: 0.95rem;
+    }
+
+    .badge-eco {
+        display: inline-block;
+        background: #d4edda;
+        color: #155724;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .card-footer a {
+        text-decoration: none;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #fff;
+    }
+
+    .btn-primary { background-color: #198754; }
+    .btn-primary:hover { background-color: #157347; }
+    .btn-danger { background-color: #d9534f; }
+    .btn-danger:hover { background-color: #c9302c; }
+
+    .page-title {
+        text-align: center;
+        font-weight: 700;
+        margin-top: 30px;
+        font-size: 1.8rem;
+        color: #198754;
+    }
+</style>
+
+<div class="container">
+    <h2 class="page-title">Liste des covoiturages</h2>
+
+    <?php if (!empty($covoiturages)): ?>
+        <div class="covoiturages-container">
+            <?php foreach ($covoiturages as $c): ?>
+                <div class="covoiturage-card">
+                    <div class="card-header">
+                        <span class="ville"><?= htmlspecialchars($c['ville_depart_nom']) ?></span>
+                        <i class="bi bi-arrow-right"></i>
+                        <span class="ville"><?= htmlspecialchars($c['ville_arrivee_nom']) ?></span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Date :</strong> <?= htmlspecialchars($c['date_depart']) ?> à <?= htmlspecialchars($c['heure_depart']) ?></p>
+                        <?php if(!empty($c['duree_minutes'])): ?>
+                            <p><strong>Durée :</strong> <?= htmlspecialchars($c['duree_minutes']) ?> min</p>
+                        <?php endif; ?>
+                        <?php if(!empty($c['distance_km'])): ?>
+                            <p><strong>Distance :</strong> <?= htmlspecialchars($c['distance_km']) ?> km</p>
+                        <?php endif; ?>
+                        <p><strong>Prix :</strong> <?= htmlspecialchars($c['prix']) ?> €</p>
+                        <p><strong>Places disponibles :</strong> <?= htmlspecialchars($c['nb_places']) ?></p>
+                        <?php if(!empty($c['ecologique'])): ?>
+                            <p class="badge-eco">Trajet écologique</p>
+                        <?php endif; ?>
+                        <p><strong>Statut :</strong> <?= htmlspecialchars($c['statut']) ?></p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="index.php?entity=covoiturages&action=edit&id=<?= $c['id_covoiturage'] ?>" class="btn btn-primary">Modifier</a>
+                        <a href="index.php?entity=covoiturages&action=delete&id=<?= $c['id_covoiturage'] ?>" class="btn btn-danger" onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">Supprimer</a>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
+    <?php else: ?>
+        <p style="text-align:center; margin-top:30px;">Aucun covoiturage disponible.</p>
     <?php endif; ?>
-</main>
+</div>
+
+
