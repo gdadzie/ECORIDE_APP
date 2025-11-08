@@ -1,0 +1,11 @@
+                                                                  body { font-family: 'Inter', sans-serif; background-color: #f5f8f6; }
+.dashboard-header { text-align: center; margin-top: 40px; margin-bottom: 50px; }
+.dashboard-header h2 { color: #198754; font-weight: 700; }
+.dashboard-header p { font-size: 18px; color: #333; }
+.card-dashboard { border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); transition: transform 0.2s ease-in-out; }
+.card-dashboard:hover { transform: translateY(-5px); }
+.card-dashboard .card-body { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
+.card-dashboard .card-body h5 { margin-top: 15px; font-weight: 600; color: #198754; }
+.card-dashboard .card-body p { font-size: 14px; color: #555; text-align: center; }
+.card-dashboard .btn { margin-top: 15px; }
+.dashboard-container { max-width: 1200px; margin: auto; }
