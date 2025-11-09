@@ -21,7 +21,9 @@
     <body class="d-flex flex-column min-vh-100">
 
         <?php include __DIR__ . '/../partials/header.php'; ?>
-        <?php include __DIR__ . '/../partials/main.php'; ?>
+        <?php include __DIR__ . '/../partials/banniere.php'; ?>
+        <?php include __DIR__ . '/../accueil/convoiturages.php'; ?>
+        <?php include __DIR__ . '/../partials/main_accueil.php'; ?>
         <?php include __DIR__ . '/../partials/footer.php'; ?>
 
         <!-- SCRIPT JAVASCRIPT -->

@@ -90,7 +90,7 @@ if (!isset($covoiturages)) {
 </style>
 
 <div class="container">
-    <h2 class="page-title">Liste des covoiturages</h2>
+    <h2 class="page-title">Mes covoiturages</h2>
 
     <?php if (!empty($covoiturages)): ?>
         <div class="covoiturages-container">
@@ -117,8 +117,8 @@ if (!isset($covoiturages)) {
                         <p><strong>Statut :</strong> <?= htmlspecialchars($c['statut']) ?></p>
                     </div>
                     <div class="card-footer">
-                        <a href="index.php?entity=covoiturages&action=edit&id=<?= $c['id_covoiturage'] ?>" class="btn btn-primary">Modifier</a>
-                        <a href="index.php?entity=covoiturages&action=delete&id=<?= $c['id_covoiturage'] ?>" class="btn btn-danger" onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">Supprimer</a>
+                        <a href="../utilisateurs/index.php?entity=covoiturages&action=edit&id=<?= $c['id_covoiturage'] ?>" class="btn btn-primary">Modifier</a>
+                        <a href="../utilisateurs/index.php?entity=covoiturages&action=delete&id=<?= $c['id_covoiturage'] ?>" class="btn btn-danger" onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">Supprimer</a>
                     </div>
                 </div>
             <?php endforeach; ?>

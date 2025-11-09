@@ -1,5 +1,5 @@
 <!-- Mes Covoiturages -->
-<div class="tab-pane fade" id="covoit">
+<div class="tab-pane fade" id="mes-covoiturages">
     <h4>Mes Covoiturages</h4>
     <?php if (!empty($covoiturages)): ?>
         <ul>

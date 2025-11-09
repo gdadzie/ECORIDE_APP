@@ -1,36 +1,16 @@
 <?php include __DIR__ . '/../layout.php'; ?>
-<?php include __DIR__ . '/../partials/header.php'; ?>
-    <style>
-        body { background: #f5f8f6; font-family: 'Inter', sans-serif; }
-        .search-header { text-align:center; margin-top:40px; margin-bottom:30px; }
-        .search-header h2 { color:#198754; font-weight:700; }
-        .search-form { background:#fff; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.06); padding:30px; }
-        .form-label { font-weight:600; color:#333; }
-        .btn-search { background-color:#198754; color:#fff; border-radius:8px; padding:10px 20px; transition:all 0.2s ease-in-out; }
-        .btn-search:hover { background-color:#157347; transform:translateY(-2px); }
-        .message { text-align:center; color:#d9534f; font-weight:600; margin-top:20px; }
-        .covoiturage-card { border:none; border-radius:16px; overflow:hidden; box-shadow:0 8px 25px rgba(0,0,0,0.08); transition:transform 0.2s ease-in-out; background:#fff; }
-        .covoiturage-card:hover { transform:translateY(-5px); }
-        .covoiturage-card .card-body { padding:20px; }
-        .driver-info { display:flex; align-items:center; gap:15px; margin-bottom:10px; }
-        .driver-info img { width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #198754; }
-        .driver-info strong { font-size:18px; color:#198754; }
-        .trip-info { font-size:15px; color:#555; margin-bottom:10px; }
-        .price { font-size:18px; font-weight:700; color:#198754; }
-        .btn-details { border:1px solid #198754; color:#198754; border-radius:8px; transition:all 0.2s ease-in-out; }
-        .btn-details:hover { background-color:#198754; color:#fff; }
-    </style>
+
+<head>
+    <link rel="stylesheet" href='assets/css/covoiturage/covoiturage.css'>
 </head>
+
 <body>
 <div class="container py-5">
 
-    <div class="search-header">
-        <h2>Rechercher un covoiturage</h2>
-        <p class="text-muted">Trouvez un trajet correspondant à vos besoins en quelques clics.</p>
-    </div>
+
 
     <!-- Formulaire de recherche -->
-    <form method="POST" action="" class="search-form mb-5">
+    <form method="POST" action="" class="search-form mb-5 mx-auto">
         <div class="row g-3">
             <div class="col-md-3">
                 <label class="form-label">Ville de départ</label>
@@ -133,7 +113,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+
 
 
 

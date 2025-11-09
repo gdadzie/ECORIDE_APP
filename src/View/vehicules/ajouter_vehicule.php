@@ -1,91 +1,70 @@
-<?php include __DIR__ . '/../layout.php'; ?>
-<?php include __DIR__ . '/../partials/header.php'; ?>
 
 <?php
-$marquesJS = [];
-foreach ($marques as $m) {
-    $marquesJS[] = [
-            'label' => $m['nom_marque'],
-            'value' => $m['nom_marque'],
-            'id_marque' => $m['id_marque']
-    ];
-}
-?>
+// Affichage du message
+if ($message !== ''): ?>
+    <div class="alert <?= $success ? 'alert-success' : 'alert-danger' ?> mt-3">
+        <?= $message ?>
+    </div>
+<?php endif; ?>
+<div class="tab-pane fade" id="add-vehicule">
 
-<div class="container mt-5">
-    <?php if (!empty($message)): ?>
-        <div class="alert <?= strpos($message, 'succès') !== false ? 'alert-success' : 'alert-danger' ?>" role="alert">
-            <?= htmlspecialchars($message) ?>
-        </div>
-    <?php endif; ?>
+    <!-- Inclure le formulaire d'ajout de véhicule -->
+    <div class="card shadow-sm p-4 mt-3">
+        <h4 class="mb-4 text-success">Ajouter un véhicule</h4>
+        <form method="POST" class="mb-4">
+            <input type="hidden" name="add_vehicle" value="1">
 
-    <form method="POST" class="row g-3">
-        <div class="col-md-6">
-            <label for="nom_marque" class="form-label">Marque</label>
-            <input type="text" id="nom_marque" class="form-control" required>
-            <input type="hidden" name="marque" id="id_marque">
-        </div>
+            <div class="mb-3">
+                <label for="id_marque">Marque</label>
+                <select name="id_marque" id="id_marque" class="form-select" required>
+                    <option value="">-- Sélectionnez une marque --</option>
+                    <?php foreach ($marques as $marque): ?>
+                        <option value="<?= $marque['id_marque'] ?>"><?= htmlspecialchars($marque['nom_marque']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-        <div class="col-md-6">
-            <label for="modele" class="form-label">Modèle</label>
-            <input type="text" name="modele" id="modele" class="form-control" required>
-        </div>
+            <div class="mb-3">
+                <label for="modele">Modèle</label>
+                <input type="text" name="modele" id="modele" class="form-control" required>
+            </div>
 
-        <div class="col-md-6">
-            <label for="couleur" class="form-label">Couleur</label>
-            <input type="text" name="couleur" id="couleur" class="form-control" required>
-        </div>
+            <div class="mb-3">
+                <label for="couleur">Couleur</label>
+                <select name="couleur" id="couleur" class="form-select" required>
+                    <?php foreach ($couleurs as $c): ?>
+                        <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-        <div class="col-md-6">
-            <label for="energie" class="form-label">Énergie</label>
-            <select name="energie" id="energie" class="form-select" required>
-                <option value="essence">Essence</option>
-                <option value="diesel">Diesel</option>
-                <option value="electrique">Électrique</option>
-                <option value="hybride">Hybride</option>
-            </select>
-        </div>
+            <div class="mb-3">
+                <label for="energie">Énergie</label>
+                <select name="energie" id="energie" class="form-select" required>
+                    <?php foreach ($energies as $e): ?>
+                        <option value="<?= htmlspecialchars($e) ?>"><?= htmlspecialchars($e) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-        <div class="col-md-6">
-            <label for="immatriculation" class="form-label">Immatriculation</label>
-            <input type="text" name="immatriculation" id="immatriculation" class="form-control" required>
-        </div>
+            <div class="mb-3">
+                <label for="nb_places">Nombre de places</label>
+                <input type="number" name="nb_places" id="nb_places" class="form-control" min="1" value="4">
+            </div>
 
-        <div class="col-md-6">
-            <label for="date_immatriculation" class="form-label">Date première immatriculation</label>
-            <input type="date" name="date_immatriculation" id="date_immatriculation" class="form-control" required>
-        </div>
+            <div class="mb-3">
+                <label for="immatriculation">Immatriculation</label>
+                <input type="text" name="immatriculation" id="immatriculation" class="form-control" required>
+            </div>
 
-        <div class="col-md-6">
-            <label for="nb_places" class="form-label">Nombre de places</label>
-            <input type="number" name="nb_places" id="nb_places" class="form-control" min="1" max="9" required>
-        </div>
+            <div class="mb-3">
+                <label for="date_premiere_immatriculation">Date première immatriculation</label>
+                <input type="date" name="date_premiere_immatriculation" id="date_premiere_immatriculation" class="form-control" required>
+            </div>
 
-        <div class="col-12 mt-3">
-            <button type="submit" class="btn btn-primary">Ajouter le véhicule</button>
-        </div>
-    </form>
+            <button type="submit" class="btn btn-success">Ajouter le véhicule</button>
+        </form>
+
+
+
 </div>
-
-<?php include __DIR__ . '/../partials/footer.php'; ?>
-
-<!-- jQuery UI pour autocomplétion -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-
-<script>
-    $(function() {
-        var marques = <?= json_encode($marquesJS) ?>;
-
-        $('#nom_marque').autocomplete({
-            source: marques,
-            minLength: 1,
-            select: function(event, ui) {
-                $('#nom_marque').val(ui.item.value);
-                $('#id_marque').val(ui.item.id_marque);
-                return false;
-            }
-        });
-    });
-</script>

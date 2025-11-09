@@ -134,6 +134,12 @@
 
 <script>
     $(document).ready(function() {
+        // 🧩 Vérifie si la table est déjà initialisée
+        if ($.fn.DataTable.isDataTable('#vehiculesTable')) {
+            $('#vehiculesTable').DataTable().destroy();
+        }
+
+        // 🟢 Initialise DataTables (une seule fois)
         var table = $('#vehiculesTable').DataTable({
             paging: true,
             pageLength: 10,
@@ -151,12 +157,13 @@
             }
         });
 
-        // Select/Deselect all + highlight
-        $('#select-all').click(function() {
+        // ✅ Checkbox "Tout sélectionner"
+        $('#select-all').on('click', function() {
             $('.select-row').prop('checked', this.checked).trigger('change');
         });
 
-        $('.select-row').change(function() {
+        // ✅ Sélection individuelle avec coloration
+        $('.select-row').on('change', function() {
             $(this).closest('tr').toggleClass('selected-row', this.checked);
             toggleDeleteButton();
         });
@@ -169,19 +176,20 @@
             }
         }
 
-        $('#delete-selected').click(function() {
+        // ✅ Suppression multiple
+        $('#delete-selected').on('click', function() {
             if(confirm('Voulez-vous vraiment supprimer tous les véhicules sélectionnés ?')) {
                 $('#vehiculesForm').submit();
             }
         });
 
-        // Filtrage par colonne
+        // ✅ Filtres colonne par colonne
         $('#filter-marque').on('keyup', function() { table.column(2).search(this.value).draw(); });
         $('#filter-modele').on('keyup', function() { table.column(3).search(this.value).draw(); });
         $('#filter-couleur').on('keyup', function() { table.column(4).search(this.value).draw(); });
         $('#filter-energie').on('change', function() { table.column(5).search(this.value).draw(); });
 
-        // Message alert auto fade out après 4s
+        // ✅ Message auto fade
         setTimeout(function() { $('.message-alert').fadeOut('slow'); }, 4000);
     });
 </script>

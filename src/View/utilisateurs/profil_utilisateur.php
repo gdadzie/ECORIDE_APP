@@ -45,26 +45,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Créer les onglets pour naviguer entre les sections du profil -->
         <ul class="nav nav-tabs" id="profilTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button">
+                <button class="nav-link active" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button" role="tab">
                     Mes Informations
                 </button>
             </li>
+
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="vehicule-tab" data-bs-toggle="tab" data-bs-target="#vehicule" type="button">
+                <button class="nav-link" id="vehicule-tab" data-bs-toggle="tab" data-bs-target="#add-vehicule" type="button" role="tab">
                     Mes Véhicules
                 </button>
             </li>
+
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="covoit-tab" data-bs-toggle="tab" data-bs-target="#covoit" type="button">
-                    Mes Covoiturages
+                <button class="nav-link" id="covoiturage-tab" data-bs-toggle="tab" data-bs-target="#mes-covoiturages" type="button" role="tab">
+                    Mes covoiturages
                 </button>
             </li>
+
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button">
-                    Changer Mot de Passe
+                <button class="nav-link" id="mdp-tab" data-bs-toggle="tab" data-bs-target="#mdp" type="button" role="tab">
+                    Changer mon mots de passe
                 </button>
             </li>
+
+
+
+
         </ul>
+
+
+
 
         <!-- Créer le contenu des onglets -->
         <div class="tab-content mt-4">
@@ -73,10 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php include __DIR__ . '/../utilisateurs/mes_informations_personnelles.php'; ?>
 
             <!-- Inclure la section pour ajouter des véhicules -->
-            <?php include __DIR__ . '/../utilisateurs/ajouter_vehicule.php'; ?>
+            <?php include __DIR__ . '/../vehicules/ajouter_vehicule.php'; ?>
 
             <!-- Inclure la section pour gérer les covoiturages du conducteur -->
-            <?php include __DIR__ . '/../utilisateurs/covoiturages_conducteur.php'; ?>
+            <?php include __DIR__ . '/../covoiturages/mes_covoiturages.php'; ?>
 
             <!-- Inclure la section pour changer le mot de passe -->
             <?php include __DIR__ . '/../utilisateurs/changer_mot_de_passe.php'; ?>

@@ -2,7 +2,7 @@
     <nav class="navbar navbar-expand-lg navbar-theme-green fixed-top px-4 py-3">
         <div class="container">
             <a class="navbar-brand fw-bold fs-3" href="index.php">
-                <img src="assets/images/logo.png" alt="EcoRide Logo">
+                ECORIDE
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
                     aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,6 +17,8 @@
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">Les fonctions</a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                            <li><a class="dropdown-item" href="index.php?entity=accueil&action=dashboard">Tableau de bord ECORIDE</a></li>
                             <li><a class="dropdown-item" href="index.php?entity=utilisateurs&action=liste_utilisateurs">Liste des utilisateurs</a></li>
                             <li><a class="dropdown-item" href="index.php?entity=covoiturages&action=liste_covoiturages">Liste des covoiturages</a></li>
                             <li><hr class="dropdown-divider"></li>
