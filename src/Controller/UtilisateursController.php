@@ -259,7 +259,7 @@ class UtilisateursController
 
         // 🔹 Si tu as un repo de covoiturages passé au contrôleur
         $covoitRepo = new \Repository\CovoituragesRepository(); // ou mieux : injecte-le via le constructeur
-        $covoiturages = $covoitRepo->getCovoituragesByUtilisateur($user->getIdUtilisateur());
+        $covoiturages = $covoitRepo->getAllCovoiturages($user->getIdUtilisateur());
 
         // 🔹 Préparer les variables pour la vue
         $viewData = [

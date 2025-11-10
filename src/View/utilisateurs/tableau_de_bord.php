@@ -98,7 +98,7 @@ $userPseudo = is_object($user) ? $user->getPseudo() : ($user['pseudo'] ?? 'Utili
                     <img src="https://img.icons8.com/color/96/000000/list.png" alt="Liste des Covoiturages"/>
                     <h5>Liste des covoiturages</h5>
                     <p>Consultez la liste complète des covoiturages disponibles et réservez facilement.</p>
-                    <a href="index.php?entity=covoiturages&action=liste_covoiturages" class="btn btn-success">Voir la liste</a>
+                    <a href="index.php?entity=covoiturages&action=resultats_recherche" class="btn btn-success">Voir la liste</a>
                 </div>
             </div>
         </div>

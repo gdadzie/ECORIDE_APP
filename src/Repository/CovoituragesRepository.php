@@ -31,10 +31,10 @@ class CovoituragesRepository
             $stmt = $this->conn->prepare('
                 INSERT INTO covoiturages
                 (id_utilisateur, id_vehicule, ville_depart, ville_arrivee, date_depart,
-                 heure_depart, distance_km, nb_places, ecologique, statut, duree_minutes)
+                 heure_depart, distance_km, prix, nb_places, ecologique, statut, duree_minutes)
                 VALUES
                 (:id_utilisateur, :id_vehicule, :ville_depart, :ville_arrivee, :date_depart,
-                 :heure_depart, :distance_km, :nb_places, :ecologique, :statut, :duree_minutes)
+                 :heure_depart, :distance_km,:prix, :nb_places, :ecologique, :statut, :duree_minutes)
             ');
 
             return $stmt->execute([
@@ -45,6 +45,7 @@ class CovoituragesRepository
                 ':date_depart'    => $covoiturage->getDateDepart(),
                 ':heure_depart'   => $covoiturage->getHeureDepart(),
                 ':distance_km'    => $covoiturage->getDistanceKm(),
+                ':prix'           => $covoiturage->getPrix(),
                 ':nb_places'      => $covoiturage->getNbPlaces(),
                 ':ecologique'     => $covoiturage->isEcologique(),
                 ':statut'         => $covoiturage->getStatut(),
@@ -60,27 +61,45 @@ class CovoituragesRepository
     // ────────────────────────────────
     // 🔹 Récupérer covoiturages par utilisateur (avec noms de villes)
     // ────────────────────────────────
-    public function getCovoituragesByUtilisateur(int $userId): array
+    public function getCovoiturageByUtilisateur(int $id): ?array
     {
         try {
-            $stmt = $this->conn->prepare('
-                SELECT c.*,
-                       vd.nom_ville AS ville_depart_nom,
-                       va.nom_ville AS ville_arrivee_nom
-                FROM covoiturages c
-                JOIN villes vd ON c.ville_depart = vd.id_ville
-                JOIN villes va ON c.ville_arrivee = va.id_ville
-                WHERE c.id_utilisateur = :user_id
-                ORDER BY c.date_depart DESC, c.heure_depart DESC
-            ');
 
-            $stmt->execute([':user_id' => $userId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('Erreur getCovoituragesByUtilisateur : ' . $e->getMessage());
-            return [];
+            $sql = "
+        SELECT 
+            c.id_covoiturage,
+            c.date_depart,
+            c.heure_depart,
+            c.distance_km,
+            c.prix,
+            c.nb_places,
+            c.ecologique,
+            c.duree_minutes,
+            c.statut,
+            
+            u.pseudo AS conducteur,
+            u.photo AS photo_conducteur,
+            
+            
+            vd.nom_ville AS ville_depart_nom,
+            va.nom_ville AS ville_arrivee_nom
+            
+        FROM covoiturages c
+        JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+        JOIN villes vd ON c.ville_depart = vd.id_ville
+        JOIN villes va ON c.ville_arrivee = va.id_ville
+        WHERE c.id_covoiturage = :id
+    ";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ?: null;
+        } catch (\PDOException $e) {
+            error_log('Erreur getCovoiturageById : ' . $e->getMessage());
+            return null;
         }
     }
+
 
     // ────────────────────────────────
     // 🔹 Filtrer par covoiturages écologiques
@@ -233,5 +252,28 @@ class CovoituragesRepository
             return [];
         }
     }
+
+    // ────────────────────────────────
+// 🔹 Mettre à jour le statut d'un covoiturage
+// ────────────────────────────────
+    public function updateStatutCovoiturage(int $id, string $statut): bool
+    {
+        try {
+            $stmt = $this->conn->prepare("
+            UPDATE covoiturages
+            SET statut = :statut
+            WHERE id_covoiturage = :id
+        ");
+            return $stmt->execute([
+                ':statut' => $statut,
+                ':id'     => $id
+            ]);
+        } catch (\PDOException $e) {
+            $this->lastError = $e->getMessage();
+            error_log('Erreur updateStatutCovoiturage : ' . $e->getMessage());
+            return false;
+        }
+    }
+
 
 }

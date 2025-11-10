@@ -131,28 +131,66 @@ class CovoituragesController
     /*******************************
      * Action AJAX pour la recherche
      *******************************/
-    public function recherche()
+    public function recherche(): void
     {
+        header('Content-Type: application/json; charset=utf-8');
+
         $villeDepart  = trim($_POST['ville_depart'] ?? '');
         $villeArrivee = trim($_POST['ville_arrivee'] ?? '');
         $dateDepart   = $_POST['date_depart'] ?? null;
 
-        $covoiturages = $this->rechercherCovoituragesSouples($villeDepart, $villeArrivee, $dateDepart);
-
-        if (empty($covoiturages)) {
-            echo '<div class="alert alert-warning text-center">😕 Aucun covoiturage trouvé pour ces critères.</div>';
+        // Validation basique
+        if (empty($villeDepart) && empty($villeArrivee)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Veuillez saisir au moins une ville de départ ou d’arrivée.'
+            ]);
             return;
         }
 
-        foreach ($covoiturages as $c) {
-            echo '<div class="card mb-3 p-3 shadow-sm">';
-            echo '<h5>' . htmlspecialchars($c['ville_depart_nom']) . ' → ' . htmlspecialchars($c['ville_arrivee_nom']) . '</h5>';
-            echo '<p><strong>Date :</strong> ' . htmlspecialchars($c['date_depart']) . '</p>';
-            echo '<p><strong>Heure :</strong> ' . htmlspecialchars($c['heure_depart']) . '</p>';
-            echo '<p><strong>Places :</strong> ' . htmlspecialchars($c['nb_places']) . '</p>';
-            echo '</div>';
+        try {
+            $covoiturages = $this->rechercherCovoituragesSouples($villeDepart, $villeArrivee, $dateDepart);
+
+            if (empty($covoiturages)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Aucun covoiturage trouvé pour ces critères.'
+                ]);
+                return;
+            }
+
+            // On enrichit légèrement les données pour le front Echolide
+            $data = array_map(function($c) {
+                return [
+                    'id' => $c['id_covoiturage'],
+                    'ville_depart_nom' => $c['ville_depart_nom'],
+                    'ville_arrivee_nom' => $c['ville_arrivee_nom'],
+                    'date_depart' => $c['date_depart'],
+                    'heure_depart' => $c['heure_depart'] ?? '—',
+                    'nb_places' => $c['nb_places'],
+                    'prix' => $c['prix'],
+                    'ecologique' => (bool) $c['ecologique'],
+                    'duree_minutes' => $c['duree_minutes'],
+                    'statut' => $c['statut']
+                ];
+            }, $covoiturages);
+
+            echo json_encode([
+                'success' => true,
+                'count'   => count($covoiturages),
+                'data'    => $data
+            ]);
+
+        } catch (\Throwable $e) {
+            error_log('Erreur recherche covoiturages : ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erreur serveur : ' . $e->getMessage()
+            ]);
         }
     }
+
+
 
     /*******************************
      * Recherche via formulaire classique
@@ -236,4 +274,61 @@ class CovoituragesController
 
         require_once __DIR__ . '/../View/partials/resultats_covoiturages.php';
     }
+
+    public function showDetails()
+    {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($id <= 0) {
+            $covoiturage = null;
+        } else {
+            $covoiturage = $this->repo->getCovoiturageByUtilisateur($id);
+        }
+
+        if (!$covoiturage) {
+            echo "<p class='text-center text-danger'>Covoiturage introuvable.</p>";
+            return;
+        }
+
+        require_once __DIR__ . '/../View/covoiturages/detail_covoiturage.php';
+    }
+
+    // Réserver un covoiturage
+    public function reserverCovoiturage(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $userId = $_SESSION['user_id'] ?? null;
+        $idCovoiturage = (int) ($_POST['id_covoiturage'] ?? 0);
+
+        if (!$userId || $idCovoiturage <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Utilisateur non connecté ou covoiturage invalide.']);
+            return;
+        }
+
+        try {
+            $covoiturage = $this->repo->getCovoiturageByUtilisateur($idCovoiturage);
+            if (!$covoiturage) {
+                echo json_encode(['success' => false, 'message' => 'Covoiturage introuvable.']);
+                return;
+            }
+
+            // Mettre à jour le statut en "réservé"
+            $this->repo->updateStatutCovoiturage($idCovoiturage, 'réservé');
+
+            echo json_encode(['success' => true, 'message' => 'Covoiturage réservé avec succès !']);
+
+        } catch (\Throwable $e) {
+            error_log('Erreur réservation covoiturage : ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Erreur serveur.']);
+        }
+    }
+
+
+
+
+
+
+
+
 }

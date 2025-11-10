@@ -6,59 +6,65 @@ include __DIR__ . '/../partials/header.php';
 if (!isset($covoiturages)) {
     $covoiturages = [];
 }
+
+// 🔹 Optionnel : date suggérée si aucun covoiturage n’est disponible
+$prochaine_date = $covoiturages && empty($covoiturages) ? null : null;
 ?>
 
-<!-- Bootstrap CSS & Icons CDN -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="container my-5">
-    <h2 class="text-center mb-4 text-success fw-bold">Liste globale des covoiturages ECORIDE</h2>
+    <h2 class="text-center mb-4 text-success fw-bold">Rechercher un covoiturage ECORIDE</h2>
+
+    <!-- Formulaire de recherche -->
+    <form id="form-recherche" method="POST" action="index.php?entity=covoiturages&action=recherche_covoiturages" class="row g-3 mb-5">
+        <div class="col-md-3">
+            <input type="text" name="ville_depart" class="form-control" placeholder="Ville de départ" required>
+        </div>
+        <div class="col-md-3">
+            <input type="text" name="ville_arrivee" class="form-control" placeholder="Ville d'arrivée" required>
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="date_depart" class="form-control" required>
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-success"><i class="bi bi-search"></i> Rechercher</button>
+        </div>
+    </form>
 
     <?php if (!empty($covoiturages)): ?>
-        <div class="row g-4">
-            <?php foreach ($covoiturages as $c): ?>
-                <div class="col-md-6 col-lg-4">
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            <?php foreach ($covoiturages as $c):
+                if ($c['nb_places'] < 1) continue; // Filtrer les covoiturages sans places
+                $ecologique = (int)$c['ecologique'] === 1;
+                ?>
+                <div class="col">
                     <div class="card shadow-sm h-100">
-                        <!-- Avatar et villes -->
-                        <div class="d-flex align-items-center p-3 border-bottom">
-                            <img src="https://i.pravatar.cc/60?u=<?= $c['id_covoiturage'] ?>"
-                                 class="rounded-circle me-3" alt="Avatar conducteur">
+                        <div class="card-header d-flex align-items-center">
+                            <img src="https://i.pravatar.cc/60?u=<?= $c['id_covoiturage'] ?>" class="rounded-circle me-3" alt="Avatar conducteur">
                             <div>
-                                <div class="fw-bold text-success">
+                                <strong><?= htmlspecialchars($c['pseudo'] ?? 'Conducteur') ?></strong>
+                                <div class="small text-muted">
                                     <?= htmlspecialchars($c['ville_depart_nom']) ?>
                                     <i class="bi bi-arrow-right"></i>
                                     <?= htmlspecialchars($c['ville_arrivee_nom']) ?>
                                 </div>
-                                <small class="text-muted"><?= htmlspecialchars($c['date_depart']) ?> à <?= htmlspecialchars($c['heure_depart']) ?></small>
+                                <div class="small">Note : <?= htmlspecialchars($c['note'] ?? 'N/A') ?> / 5</div>
                             </div>
                         </div>
-
-                        <!-- Body card -->
                         <div class="card-body">
-                            <?php if(!empty($c['duree_minutes'])): ?>
-                                <p class="mb-1"><i class="bi bi-clock"></i> Durée : <?= htmlspecialchars($c['duree_minutes']) ?> min</p>
-                            <?php endif; ?>
-                            <?php if(!empty($c['distance_km'])): ?>
-                                <p class="mb-1"><i class="bi bi-signpost-2"></i> Distance : <?= htmlspecialchars($c['distance_km']) ?> km</p>
-                            <?php endif; ?>
+                            <p class="mb-1"><i class="bi bi-calendar-event"></i> <?= htmlspecialchars($c['date_depart']) ?></p>
+                            <p class="mb-1"><i class="bi bi-clock"></i> <?= htmlspecialchars($c['heure_depart']) ?> - <?= htmlspecialchars($c['heure_arrivee'] ?? 'N/A') ?></p>
+                            <p class="mb-1"><i class="bi bi-people"></i> Places restantes : <?= htmlspecialchars($c['nb_places']) ?></p>
                             <p class="mb-1"><i class="bi bi-currency-euro"></i> Prix : <?= htmlspecialchars($c['prix']) ?> €</p>
-                            <p class="mb-1"><i class="bi bi-people"></i> Places disponibles : <?= htmlspecialchars($c['nb_places']) ?></p>
-                            <?php if(!empty($c['ecologique'])): ?>
-                                <span class="badge bg-success">Trajet écologique</span>
+                            <?php if($ecologique): ?>
+                                <span class="badge bg-success mb-1"><i class="bi bi-leaf-fill"></i> Trajet écologique</span>
                             <?php endif; ?>
-                            <p class="mt-2 mb-0"><strong>Statut :</strong> <?= htmlspecialchars($c['statut']) ?></p>
                         </div>
-
-                        <!-- Footer avec actions -->
-                        <div class="card-footer d-flex justify-content-between">
-                            <a href="../utilisateurs/index.php?entity=covoiturages&action=edit&id=<?= $c['id_covoiturage'] ?>" class="btn btn-success btn-sm">
-                                Modifier
-                            </a>
-                            <a href="../utilisateurs/index.php?entity=covoiturages&action=delete&id=<?= $c['id_covoiturage'] ?>"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">
-                                Supprimer
+                        <div class="card-footer text-center">
+                            <a href="index.php?entity=covoiturages&action=detail_covoiturage&id=<?= $c['id_covoiturage'] ?>" class="btn btn-primary">
+                                <i class="bi bi-info-circle"></i> Détail
                             </a>
                         </div>
                     </div>
@@ -66,9 +72,14 @@ if (!isset($covoiturages)) {
             <?php endforeach; ?>
         </div>
     <?php else: ?>
-        <p class="text-center fs-5 mt-5">Aucun covoiturage disponible.</p>
+        <div class="alert alert-warning text-center mt-4">
+            😕 Aucun covoiturage disponible pour cette date et ces villes.
+            <?php if (!empty($prochaine_date)): ?>
+                <br>
+                Voulez-vous changer votre date vers <?= htmlspecialchars($prochaine_date) ?> ?
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
 </div>
 
-<!-- Bootstrap JS CDN -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
