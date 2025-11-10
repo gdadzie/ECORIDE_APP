@@ -110,7 +110,7 @@ class UtilisateursController
         }
 
         // Affiche la vue du formulaire de connexion
-        require_once __DIR__ . '/../View/utilisateurs/se_connecter.php';
+        require_once __DIR__ . '/../View/accueil/se_connecter.php';
     }
 
     //-------------------- TABLEAU DE BORD --------------------//
@@ -321,6 +321,26 @@ class UtilisateursController
     public function getLastError(): ?string
     {
         return $this->lastError;
+    }
+
+    public function profilPassager(): void
+    {
+        require __DIR__ . '/../View/utilisateurs/passagers/profil_passager.php';
+    }
+
+    public function profilConducteur(): void
+    {
+        require __DIR__ . '/../View/utilisateurs/conducteur/profil_conducteur.php';
+    }
+
+    public function espaceEmploye(): void
+    {
+        require __DIR__ . '/../View/utilisateurs/employe/espace_employe.php';
+    }
+
+    public function espaceAdmin(): void
+    {
+        require __DIR__ . '/../View/utilisateurs/admin/espace_admin.php';
     }
 
 

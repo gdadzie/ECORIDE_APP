@@ -70,6 +70,12 @@ class AccueilController
     }
 
 
+    public function grace(): void
+    {
+        require __DIR__ . '/../View/accueil/dashboard.php';
+    }
+
+
 
 
 }

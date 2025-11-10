@@ -1,4 +1,5 @@
 <?php
+
 namespace Repository;
 
 use Entity\Covoiturage;
@@ -8,140 +9,229 @@ use PDOException;
 
 class CovoituragesRepository
 {
-private ?PDO $conn = null;
-private ?string $lastError = null;
+    private ?PDO $conn = null;
+    private ?string $lastError = null;
 
-public function __construct()
-{
-$this->conn = Database::getConnection();
+    public function __construct()
+    {
+        $this->conn = Database::getConnection();
 
-if (!$this->conn) {
-$error = Database::getLastError() ?? "Connexion à la base de données impossible.";
-throw new \RuntimeException($error);
-}
-}
+        if (!$this->conn) {
+            $error = Database::getLastError() ?? "Connexion à la base de données impossible.";
+            throw new \RuntimeException($error);
+        }
+    }
 
-// Créer un covoiturage
-public function create(Covoiturage $covoiturage): bool
-{
-try {
-$stmt = $this->conn->prepare('
-INSERT INTO covoiturages
-(id_utilisateur, id_vehicule, ville_depart, ville_arrivee, date_depart,
-heure_depart, distance_km, nb_places, ecologique, statut)
-VALUES
-(:id_utilisateur, :id_vehicule, :ville_depart, :ville_arrivee, :date_depart,
-:heure_depart, :distance_km, :nb_places, :ecologique, :statut)
-');
+    // ────────────────────────────────
+    // 🔹 Créer un covoiturage
+    // ────────────────────────────────
+    public function create(Covoiturage $covoiturage): bool
+    {
+        try {
+            $stmt = $this->conn->prepare('
+                INSERT INTO covoiturages
+                (id_utilisateur, id_vehicule, ville_depart, ville_arrivee, date_depart,
+                 heure_depart, distance_km, nb_places, ecologique, statut, duree_minutes)
+                VALUES
+                (:id_utilisateur, :id_vehicule, :ville_depart, :ville_arrivee, :date_depart,
+                 :heure_depart, :distance_km, :nb_places, :ecologique, :statut, :duree_minutes)
+            ');
 
-return $stmt->execute([
-':id_utilisateur' => $covoiturage->getIdUtilisateur(),
-':id_vehicule' => $covoiturage->getIdVehicule(),
-':ville_depart' => $covoiturage->getVilleDepart(),
-':ville_arrivee' => $covoiturage->getVilleArrivee(),
-':date_depart' => $covoiturage->getDateDepart(),
-':heure_depart' => $covoiturage->getHeureDepart(),
-':distance_km' => $covoiturage->getDistanceKm(),
-':nb_places' => $covoiturage->getNbPlaces(),
-':ecologique' => $covoiturage->isEcologique(),
-':statut' => $covoiturage->getStatut(),
-]);
-} catch (PDOException $e) {
-$this->lastError = $e->getMessage();
-error_log('Erreur lors de la création du covoiturage : ' . $e->getMessage());
-return false;
-}
-}
+            return $stmt->execute([
+                ':id_utilisateur' => $covoiturage->getIdUtilisateur(),
+                ':id_vehicule'    => $covoiturage->getIdVehicule(),
+                ':ville_depart'   => $covoiturage->getVilleDepart(),
+                ':ville_arrivee'  => $covoiturage->getVilleArrivee(),
+                ':date_depart'    => $covoiturage->getDateDepart(),
+                ':heure_depart'   => $covoiturage->getHeureDepart(),
+                ':distance_km'    => $covoiturage->getDistanceKm(),
+                ':nb_places'      => $covoiturage->getNbPlaces(),
+                ':ecologique'     => $covoiturage->isEcologique(),
+                ':statut'         => $covoiturage->getStatut(),
+                ':duree_minutes'  => $covoiturage->getDureeMinutes()
+            ]);
+        } catch (PDOException $e) {
+            $this->lastError = $e->getMessage();
+            error_log('Erreur lors de la création du covoiturage : ' . $e->getMessage());
+            return false;
+        }
+    }
 
-// Récupérer covoiturages par utilisateur avec noms de villes
-public function getCovoituragesByUtilisateur(int $userId): array
-{
-try {
-$stmt = $this->conn->prepare('
-SELECT c.*,
-vd.nom_ville AS ville_depart_nom,
-va.nom_ville AS ville_arrivee_nom
-FROM covoiturages c
-JOIN villes vd ON c.ville_depart = vd.id_ville
-JOIN villes va ON c.ville_arrivee = va.id_ville
-WHERE c.id_utilisateur = :user_id
-ORDER BY c.date_depart DESC, c.heure_depart DESC
-');
-$stmt->execute([':user_id' => $userId]);
-return $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-error_log('Erreur getCovoituragesByUtilisateur : ' . $e->getMessage());
-return [];
-}
-}
+    // ────────────────────────────────
+    // 🔹 Récupérer covoiturages par utilisateur (avec noms de villes)
+    // ────────────────────────────────
+    public function getCovoituragesByUtilisateur(int $userId): array
+    {
+        try {
+            $stmt = $this->conn->prepare('
+                SELECT c.*,
+                       vd.nom_ville AS ville_depart_nom,
+                       va.nom_ville AS ville_arrivee_nom
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                WHERE c.id_utilisateur = :user_id
+                ORDER BY c.date_depart DESC, c.heure_depart DESC
+            ');
 
-// Filtrer par covoiturages écologiques
-public function filterByEcologique(int $ecologique): array
-{
-try {
-$stmt = $this->conn->prepare('
-SELECT c.*,
-vd.nom_ville AS ville_depart_nom,
-va.nom_ville AS ville_arrivee_nom
-FROM covoiturages c
-JOIN villes vd ON c.ville_depart = vd.id_ville
-JOIN villes va ON c.ville_arrivee = va.id_ville
-WHERE c.ecologique = :ecologique
-');
-$stmt->execute([':ecologique' => $ecologique]);
-return $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-error_log('Erreur filterByEcologique : ' . $e->getMessage());
-return [];
-}
-}
+            $stmt->execute([':user_id' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Erreur getCovoituragesByUtilisateur : ' . $e->getMessage());
+            return [];
+        }
+    }
 
-// Filtrer par prix maximum
-public function filterByPrixMax(float $prixMax): array
-{
-try {
-$stmt = $this->conn->prepare('
-SELECT c.*,
-vd.nom_ville AS ville_depart_nom,
-va.nom_ville AS ville_arrivee_nom
-FROM covoiturages c
-JOIN villes vd ON c.ville_depart = vd.id_ville
-JOIN villes va ON c.ville_arrivee = va.id_ville
-WHERE c.prix <= :prixMax
-ORDER BY c.prix ASC
-');
-$stmt->execute([':prixMax' => $prixMax]);
-return $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-error_log('Erreur filterByPrixMax : ' . $e->getMessage());
-return [];
-}
-}
+    // ────────────────────────────────
+    // 🔹 Filtrer par covoiturages écologiques
+    // ────────────────────────────────
+    public function filterByEcologique(int $ecologique): array
+    {
+        try {
+            $stmt = $this->conn->prepare('
+                SELECT c.*,
+                       vd.nom_ville AS ville_depart_nom,
+                       va.nom_ville AS ville_arrivee_nom
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                WHERE c.ecologique = :ecologique
+            ');
 
-// Filtrer par durée maximale
-public function filterByDureeMax(int $dureeMax): array
-{
-try {
-$stmt = $this->conn->prepare('
-SELECT c.*,
-vd.nom_ville AS ville_depart_nom,
-va.nom_ville AS ville_arrivee_nom
-FROM covoiturages c
-JOIN villes vd ON c.ville_depart = vd.id_ville
-JOIN villes va ON c.ville_arrivee = va.id_ville
-WHERE c.duree_minutes <= :dureeMax
-ORDER BY c.duree_minutes ASC
-');
-$stmt->execute([':dureeMax' => $dureeMax]);
-return $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-error_log('Erreur filterByDureeMax : ' . $e->getMessage());
-return [];
-}
-}
+            $stmt->execute([':ecologique' => $ecologique]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Erreur filterByEcologique : ' . $e->getMessage());
+            return [];
+        }
+    }
 
-public function getLastError(): ?string
-{
-return $this->lastError;
-}
+    // ────────────────────────────────
+    // 🔹 Filtrer par prix maximum
+    // ────────────────────────────────
+    public function filterByPrixMax(float $prixMax): array
+    {
+        try {
+            $stmt = $this->conn->prepare('
+                SELECT c.*,
+                       vd.nom_ville AS ville_depart_nom,
+                       va.nom_ville AS ville_arrivee_nom
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                WHERE c.prix <= :prixMax
+                ORDER BY c.prix ASC
+            ');
+
+            $stmt->execute([':prixMax' => $prixMax]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Erreur filterByPrixMax : ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    // ────────────────────────────────
+    // 🔹 Filtrer par durée maximale
+    // ────────────────────────────────
+    public function filterByDureeMax(int $dureeMax): array
+    {
+        try {
+            $stmt = $this->conn->prepare('
+                SELECT c.*,
+                       vd.nom_ville AS ville_depart_nom,
+                       va.nom_ville AS ville_arrivee_nom
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                WHERE c.duree_minutes <= :dureeMax
+                ORDER BY c.duree_minutes ASC
+            ');
+
+            $stmt->execute([':dureeMax' => $dureeMax]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Erreur filterByDureeMax : ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    // ────────────────────────────────
+    // 🔹 Recherche souple par villes (LIKE)
+    // ────────────────────────────────
+    public function rechercherCovoituragesSouples(string $villeDepart, string $villeArrivee, ?string $dateDepart = null): array
+    {
+        $query = "
+                SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                WHERE (vd.nom_ville LIKE :villeDepart OR va.nom_ville LIKE :villeDepart
+                   OR vd.nom_ville LIKE :villeArrivee OR va.nom_ville LIKE :villeArrivee)
+        ";
+
+        if (!empty($dateDepart)) {
+            $query .= " AND c.date_depart = :dateDepart";
+        }
+
+
+        $params = [];
+
+        if (!empty($villeDepart)) {
+            $query .= " AND LOWER(vd.nom_ville) LIKE LOWER(:villeDepart)";
+            $params[':villeDepart'] = "%$villeDepart%";
+        }
+
+        if (!empty($villeArrivee)) {
+            $query .= " AND LOWER(va.nom_ville) LIKE LOWER(:villeArrivee)";
+            $params[':villeArrivee'] = "%$villeArrivee%";
+        }
+
+        if (!empty($dateDepart)) {
+            $query .= " AND c.date_depart = :dateDepart";
+            $params[':dateDepart'] = $dateDepart;
+        }
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+
+    // ────────────────────────────────
+    // 🔹 Récupérer la dernière erreur
+    // ────────────────────────────────
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
+    /**
+     * Récupère tous les covoiturages présents dans la base de données
+     * avec les noms des villes de départ et d'arrivée.
+     *
+     * @return array Tableau associatif contenant tous les covoiturages
+     */
+    public function getAllCovoiturages(): array
+    {
+        try {
+            $stmt = $this->conn->query("
+            SELECT c.*, 
+                   vd.nom_ville AS ville_depart_nom, 
+                   va.nom_ville AS ville_arrivee_nom
+            FROM covoiturages c
+            JOIN villes vd ON c.ville_depart = vd.id_ville
+            JOIN villes va ON c.ville_arrivee = va.id_ville
+            ORDER BY c.date_depart ASC, c.heure_depart ASC
+        ");
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log('Erreur getAllCovoiturages : ' . $e->getMessage());
+            return [];
+        }
+    }
+
 }

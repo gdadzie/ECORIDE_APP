@@ -20,7 +20,7 @@
 
                             <li><a class="dropdown-item" href="index.php?entity=accueil&action=dashboard">Tableau de bord ECORIDE</a></li>
                             <li><a class="dropdown-item" href="index.php?entity=utilisateurs&action=liste_utilisateurs">Liste des utilisateurs</a></li>
-                            <li><a class="dropdown-item" href="index.php?entity=covoiturages&action=liste_covoiturages">Liste des covoiturages</a></li>
+                            <li><a class="dropdown-item" href="index.php?entity=covoiturages&action=liste_covoiturages_ecologique">Liste des covoiturages</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="index.php?entity=utilisateurs&action=creer_compte">Créer un compte</a></li>
                             <li><a class="dropdown-item" href="index.php?entity=covoiturages&action=rechercher_covoiturages">Rechercher covoiturage</a></li>
@@ -28,6 +28,9 @@
                             <li><a class="dropdown-item" href="index.php?entity=utilisateurs&action=charte_graphique">Charte graphique</a></li>
                             <li><a class="dropdown-item" href="index.php?entity=utilisateurs&action=tableau_de_bord">Tableau de bord</a></li>
                             <li><a class="dropdown-item" href="index.php?entity=vehicules&action=liste_vehicules">Mes véhicules</a></li>
+
+                            <li><a class="dropdown-item" href="index.php?entity=covoiturages&action=resultats_recherche">Resultat covoiturage</a></li>
+
 
                         </ul>
                     </li>
