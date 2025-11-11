@@ -218,6 +218,47 @@ class CovoituragesController
         require_once __DIR__ . '/../View/partials/formulaire_recherche_covoiturages.php';
     }
 
+    public function rechercheLarge(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $ville = trim($_POST['ville'] ?? '');
+
+        if (empty($ville)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Veuillez saisir le nom d’une ville.'
+            ]);
+            return;
+        }
+
+        try {
+            $covoiturages = $this->repo->rechercherCovoituragesParVille($ville);
+
+            if (empty($covoiturages)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Aucun covoiturage trouvé pour cette ville.'
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'count'   => count($covoiturages),
+                'data'    => $covoiturages
+            ]);
+
+        } catch (\Throwable $e) {
+            error_log('Erreur rechercheLarge covoiturages : ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erreur serveur : ' . $e->getMessage()
+            ]);
+        }
+    }
+
+
     /*******************************
      * Autocompletion des villes
      *******************************/

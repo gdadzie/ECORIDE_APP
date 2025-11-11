@@ -217,6 +217,30 @@ class CovoituragesRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Recherche souple par ville : ville de départ OU ville d'arrivée.
+     */
+    public function rechercherCovoituragesParVille(string $ville): array
+    {
+        $ville = strtolower($ville);
+
+        $sql = "
+        SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
+        FROM covoiturages c
+        JOIN villes vd ON c.ville_depart = vd.id_ville
+        JOIN villes va ON c.ville_arrivee = va.id_ville
+        WHERE LOWER(vd.nom_ville) LIKE :ville
+           OR LOWER(va.nom_ville) LIKE :ville
+        ORDER BY c.date_depart ASC, c.heure_depart ASC
+    ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':ville' => "%$ville%"]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
 
 
     // ────────────────────────────────
