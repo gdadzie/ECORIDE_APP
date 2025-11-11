@@ -34,3 +34,21 @@ main {
 .btn-main-action:hover {
     background-color: #00b34a;
 }
+
+.image-tache img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    clip-path: polygon(
+            50% 0%,
+            85% 10%,
+            100% 45%,
+            80% 85%,
+            40% 100%,
+            10% 80%,
+            0% 40%,
+            20% 10%
+    );
+    border-radius: 30%;
+}
+
