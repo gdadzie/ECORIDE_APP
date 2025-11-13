@@ -29,9 +29,18 @@
     <?php include __DIR__ . '/../partials/formulaire_recherche_covoiturages.php'; ?>
 </div>
 
+<div> <h1 class="text-success text-center"> Bienvenue sur Ecoride</h1></div>
+<div><p class="text-center">Voyager économiquement ! Voyager léger !</p></div>
 <!-- MAIN ACCUEIL -->
-<div class="container my-5">
+<div class="container-fluid my-5">
     <?php include __DIR__ . '/../partials/main_accueil.php'; ?>
+    <?php include __DIR__ . '/../partials/accueil/features.php'; ?>
+
+    <!-- ============================= -->
+    <!-- Bannière de valeurs Ecoride -->
+    <!-- ============================= -->
+
+
 </div>
 
 

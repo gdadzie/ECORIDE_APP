@@ -4,7 +4,7 @@ namespace Entity;
 
 class Covoiturage
 {
-    private int $id_covoiturage;
+    private ?int $id_covoiturage = null;
     private int $id_utilisateur;
     private int $id_vehicule;
     private int $ville_depart;
@@ -15,8 +15,7 @@ class Covoiturage
     private float $prix;
     private int $nb_places;
     private bool $ecologique;
-    private string $duree_minutes;
-
+    private int $duree_minutes;
     private string $statut;
 
     public function __construct(
@@ -32,7 +31,6 @@ class Covoiturage
         bool $ecologique,
         int $duree_minutes,
         string $statut = 'prévu'
-
     ) {
         $this->id_utilisateur = $id_utilisateur;
         $this->id_vehicule = $id_vehicule;
@@ -46,12 +44,10 @@ class Covoiturage
         $this->ecologique = $ecologique;
         $this->duree_minutes = $duree_minutes;
         $this->statut = $statut;
-
-
     }
 
     // --- Getters ---
-    public function getIdCovoiturage(): ?int { return $this->id_covoiturage ?? null; }
+    public function getIdCovoiturage(): ?int { return $this->id_covoiturage; }
     public function getIdUtilisateur(): int { return $this->id_utilisateur; }
     public function getIdVehicule(): int { return $this->id_vehicule; }
     public function getVilleDepart(): int { return $this->ville_depart; }
@@ -62,7 +58,7 @@ class Covoiturage
     public function getPrix(): float { return $this->prix; }
     public function getNbPlaces(): int { return $this->nb_places; }
     public function isEcologique(): bool { return $this->ecologique; }
-    public function getDureeMinutes(): int{ return $this->duree_minutes; }
+    public function getDureeMinutes(): int { return $this->duree_minutes; }
     public function getStatut(): string { return $this->statut; }
 
     // --- Setters ---
@@ -70,8 +66,6 @@ class Covoiturage
     public function setPrix(float $prix): void { $this->prix = $prix; }
     public function setNbPlaces(int $nb): void { $this->nb_places = $nb; }
     public function setEcologique(bool $eco): void { $this->ecologique = $eco; }
-    public function setDureeMinutes(int $duree): void{ $this->duree_minutes = $duree; }
+    public function setDureeMinutes(int $duree): void { $this->duree_minutes = $duree; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
-
-
 }

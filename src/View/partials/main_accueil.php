@@ -1,18 +1,18 @@
-<main class="flex-grow-1 container my-5 ">
+<main class=" container-fluid  mt-2 mb-5 ">
     <!-- Présentation de l'entreprise -->
 
-    <div class="presentation">
+    <div class="presentation ">
         <!-- Row responsive avec gap -->
-        <div class="row align-items-center flex-column flex-lg-row g-5 ">
+        <div class="row align-items-center g-5 ">
             <!-- Image à gauche sur desktop / en haut sur mobile -->
-            <div class="col-12 col-lg-6 d-flex justify-content-center g-5">
+            <div class="col-6">
                 <div class="">
                     <img  class="rounded-5" src="assets/images/covoiturage_2.jpg" alt="Photo profil">
                 </div>
             </div>
 
             <!-- Texte à droite sur desktop / en bas sur mobile -->
-            <div class="col-12 col-lg-6 g-5">
+            <div class="col-6">
                 <h2 class="mb-3">Présentation de l'entreprise</h2>
                 <p>EcoRide est bien plus qu'une simple plateforme de covoiturage. Nous offrons à nos utilisateurs une solution simple, économique et respectueuse de l'environnement pour tous leurs trajets quotidiens ou occasionnels.</p>
                 <p>Grâce à EcoRide, vous pouvez :</p>

@@ -78,7 +78,7 @@ $utilisateurs = $utilisateurs ?? [];
                         <td>
                             <?= $user->getRole()==2 ? '<span class="badge badge-admin">Admin</span>' : '<span class="badge badge-user">User</span>' ?>
                         </td>
-                        <td><?= htmlspecialchars($user->getTypeCovoiturage()) ?></td>
+                        <td><?= htmlspecialchars($user->getTypeUtilisateur()) ?></td>
                         <td>
                             <?= $user->getActif() ? '<span class="badge badge-actif bg-success">Oui</span>' : '<span class="badge badge-actif bg-danger">Non</span>' ?>
                         </td>

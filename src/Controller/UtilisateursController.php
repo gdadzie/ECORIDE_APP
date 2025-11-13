@@ -139,18 +139,34 @@ class UtilisateursController
     //-------------------- TABLEAU DE BORD --------------------//
     public function dashboard(): void
     {
-        // Si pas connecté → redirection
         if (empty($_SESSION['user'])) {
             header('Location: index.php?entity=utilisateurs&action=se_connecter');
             exit;
         }
 
-        // Récupère l’utilisateur connecté
-        $user = $_SESSION['user'];
+        // Récupère l’utilisateur via le repository pour avoir les infos à jour
+        $db = Database::getConnection();
+        $repo = new UtilisateursRepository($db);
+        $user = $repo->findById($_SESSION['user_id']);
 
-        // Affiche la vue du tableau de bord
-        require_once __DIR__ . '/../View/utilisateurs/tableau_de_bord.php';
+        // Met à jour la session
+        $_SESSION['user'] = $user;
+
+        // Prépare les variables pour la vue
+        $publicDir = realpath(__DIR__ . '/../../public') . DIRECTORY_SEPARATOR;
+        $userPhoto = ltrim($user->getPhoto(), '/');
+        $fullPath = $publicDir . $userPhoto;
+        $photoPathWeb = (!empty($userPhoto) && file_exists($fullPath))
+            ? '/' . $userPhoto
+            : '/uploads/photos/default-avatar.jpg';
+
+        $userPseudo = $user->getPseudo();
+        $userRole = $user->getRole();
+
+        // Passe les données à la vue
+        require __DIR__ . '/../View/utilisateurs/tableau_de_bord.php';
     }
+
 
     //-------------------- DECONNEXION --------------------//
     public function logout(): void
@@ -368,7 +384,9 @@ class UtilisateursController
 
     public function updateProfilUtilisateur(): void
     {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
         $userId = $_SESSION['user_id'] ?? null;
         if (!$userId) {
@@ -376,23 +394,56 @@ class UtilisateursController
             exit;
         }
 
+        // Récupère l'utilisateur depuis la BDD
         $utilisateur = $this->repo->findById($userId);
+        $message = '';
+        $success = false;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Mise à jour des champs
             $utilisateur->setNom($_POST['nom'] ?? '');
             $utilisateur->setPrenom($_POST['prenom'] ?? '');
             $utilisateur->setTelephone($_POST['telephone'] ?? '');
             $utilisateur->setTypeUtilisateur($_POST['type_utilisateur'] ?? 'passager');
 
+            // Gestion de la photo si uploadée
+            if (!empty($_FILES['photo']['tmp_name'])) {
+                // Le repository gère le déplacement et le chemin
+                $utilisateur->setPhoto($_FILES['photo']['tmp_name']);
+            }
+
+            // Appel unique pour mise à jour
             if ($this->repo->updateUtilisateur($utilisateur)) {
+                // MAJ immédiate dans la session
+                if (isset($_SESSION['user'])) {
+                    if (is_object($_SESSION['user'])) {
+                        $_SESSION['user']->setNom($utilisateur->getNom());
+                        $_SESSION['user']->setPrenom($utilisateur->getPrenom());
+                        $_SESSION['user']->setTelephone($utilisateur->getTelephone());
+                        $_SESSION['user']->setTypeUtilisateur($utilisateur->getTypeUtilisateur());
+                        $_SESSION['user']->setPhoto($utilisateur->getPhoto());
+                    } else {
+                        $_SESSION['user']['nom'] = $utilisateur->getNom();
+                        $_SESSION['user']['prenom'] = $utilisateur->getPrenom();
+                        $_SESSION['user']['telephone'] = $utilisateur->getTelephone();
+                        $_SESSION['user']['type_utilisateur'] = $utilisateur->getTypeUtilisateur();
+                        $_SESSION['user']['photo'] = $utilisateur->getPhoto();
+                    }
+                }
+
+                $success = true;
                 $message = "✅ Profil mis à jour avec succès !";
             } else {
-                $message = "❌ Erreur lors de la mise à jour du profil : " . $this->repo->getLastError();
+                $message = "❌ Erreur lors de la mise à jour : " . $this->repo->getLastError();
             }
         }
 
         require __DIR__ . '/../View/utilisateurs/mise_a_jour_profil.php';
     }
+
+
+
+
 
 
 
