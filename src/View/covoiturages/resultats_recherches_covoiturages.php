@@ -6,32 +6,13 @@ include __DIR__ . '/../partials/header.php';
 if (!isset($covoiturages)) {
     $covoiturages = [];
 }
-
-// 🔹 Optionnel : date suggérée si aucun covoiturage n’est disponible
-$prochaine_date = $covoiturages && empty($covoiturages) ? null : null;
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="container my-5">
-    <h2 class="text-center mb-4 text-success fw-bold">Rechercher un covoiturage ECORIDE</h2>
-
-    <!-- Formulaire de recherche -->
-    <form id="form-recherche" method="POST" action="index.php?entity=covoiturages&action=recherche_covoiturages" class="row g-3 mb-5">
-        <div class="col-md-3">
-            <input type="text" name="ville_depart" class="form-control" placeholder="Ville de départ" required>
-        </div>
-        <div class="col-md-3">
-            <input type="text" name="ville_arrivee" class="form-control" placeholder="Ville d'arrivée" required>
-        </div>
-        <div class="col-md-3">
-            <input type="date" name="date_depart" class="form-control" required>
-        </div>
-        <div class="col-md-3 d-grid">
-            <button type="submit" class="btn btn-success"><i class="bi bi-search"></i> Rechercher</button>
-        </div>
-    </form>
+    <h2 class="text-center mb-4 text-success fw-bold">Résultats de la recherche de covoiturages</h2>
 
     <?php if (!empty($covoiturages)): ?>
         <div class="row row-cols-1 row-cols-md-2 g-4">
@@ -73,11 +54,7 @@ $prochaine_date = $covoiturages && empty($covoiturages) ? null : null;
         </div>
     <?php else: ?>
         <div class="alert alert-warning text-center mt-4">
-            😕 Aucun covoiturage disponible pour cette date et ces villes.
-            <?php if (!empty($prochaine_date)): ?>
-                <br>
-                Voulez-vous changer votre date vers <?= htmlspecialchars($prochaine_date) ?> ?
-            <?php endif; ?>
+            😕 Aucun covoiturage disponible pour ces villes.
         </div>
     <?php endif; ?>
 </div>

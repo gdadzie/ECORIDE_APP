@@ -1,4 +1,5 @@
 <?php
+
 namespace Controller;
 
 use Config\Database;
@@ -96,36 +97,12 @@ class CovoituragesController
     }
 
     /************************************
-     * Recherche flexible de covoiturages
+     * Recherche flexible de covoiturages (méthode interne)
      ************************************/
     public function rechercherCovoituragesSouples(string $villeDepart, string $villeArrivee, ?string $dateDepart = null): array
     {
-        $query = "
-            SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
-            FROM covoiturages c
-            JOIN villes vd ON c.ville_depart = vd.id_ville
-            JOIN villes va ON c.ville_arrivee = va.id_ville
-            WHERE 1=1
-        ";
-
-        $params = [];
-        if (!empty($villeDepart)) {
-            $query .= " AND LOWER(vd.nom_ville) LIKE LOWER(:villeDepart)";
-            $params[':villeDepart'] = "%$villeDepart%";
-        }
-        if (!empty($villeArrivee)) {
-            $query .= " AND LOWER(va.nom_ville) LIKE LOWER(:villeArrivee)";
-            $params[':villeArrivee'] = "%$villeArrivee%";
-        }
-        if (!empty($dateDepart)) {
-            $query .= " AND c.date_depart = :dateDepart";
-            $params[':dateDepart'] = $dateDepart;
-        }
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute($params);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Délègue au repository (single source of truth)
+        return $this->repo->rechercherCovoituragesSouples($villeDepart, $villeArrivee, $dateDepart);
     }
 
     /*******************************
@@ -139,7 +116,7 @@ class CovoituragesController
         $villeArrivee = trim($_POST['ville_arrivee'] ?? '');
         $dateDepart   = $_POST['date_depart'] ?? null;
 
-        // Validation basique
+        // Validation basique : au moins un champ
         if (empty($villeDepart) && empty($villeArrivee)) {
             echo json_encode([
                 'success' => false,
@@ -159,7 +136,6 @@ class CovoituragesController
                 return;
             }
 
-            // On enrichit légèrement les données pour le front Echolide
             $data = array_map(function($c) {
                 return [
                     'id' => $c['id_covoiturage'],
@@ -171,7 +147,8 @@ class CovoituragesController
                     'prix' => $c['prix'],
                     'ecologique' => (bool) $c['ecologique'],
                     'duree_minutes' => $c['duree_minutes'],
-                    'statut' => $c['statut']
+                    'statut' => $c['statut'],
+                    'pseudo' => $c['pseudo'] ?? null
                 ];
             }, $covoiturages);
 
@@ -180,7 +157,6 @@ class CovoituragesController
                 'count'   => count($covoiturages),
                 'data'    => $data
             ]);
-
         } catch (\Throwable $e) {
             error_log('Erreur recherche covoiturages : ' . $e->getMessage());
             echo json_encode([
@@ -190,55 +166,38 @@ class CovoituragesController
         }
     }
 
-
-
     /*******************************
-     * Recherche via formulaire classique
+     * Recherche via formulaire classique (POST ancien) -> redirigé vers resultats
      *******************************/
     public function rechercherCovoiturages()
     {
-        $villeDepart  = trim($_POST['ville_depart'] ?? '');
-        $villeArrivee = trim($_POST['ville_arrivee'] ?? '');
-        $dateDepart   = $_POST['date_depart'] ?? null;
-
-        $resultats = [];
-        $error = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (empty($villeDepart) && empty($villeArrivee)) {
-                $error = "❌ Veuillez entrer au moins une ville de départ ou d’arrivée.";
-            } else {
-                $resultats = $this->rechercherCovoituragesSouples($villeDepart, $villeArrivee, $dateDepart);
-                if (empty($resultats)) {
-                    $error = "😕 Aucun covoiturage trouvé pour ces critères.";
-                }
-            }
-        }
-
-        require_once __DIR__ . '/../View/partials/formulaire_recherche_covoiturages.php';
+        // This method kept for backward compatibility: forward to resultatsRecherche
+        $this->resultatsRecherche();
     }
 
     public function rechercheLarge(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        $ville = trim($_POST['ville'] ?? '');
+        $villeDepart = trim($_POST['ville_depart'] ?? '');
+        $villeArrivee = trim($_POST['ville_arrivee'] ?? '');
+        $dateDepart = trim($_POST['date_depart'] ?? '');
 
-        if (empty($ville)) {
+        if (empty($villeDepart) && empty($villeArrivee)) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Veuillez saisir le nom d’une ville.'
+                'message' => 'Veuillez saisir une ville de départ ou d’arrivée.'
             ]);
             return;
         }
 
         try {
-            $covoiturages = $this->repo->rechercherCovoituragesParVille($ville);
+            $covoiturages = $this->repo->rechercherCovoituragesSouples($villeDepart, $villeArrivee, $dateDepart);
 
             if (empty($covoiturages)) {
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Aucun covoiturage trouvé pour cette ville.'
+                    'message' => 'Aucun covoiturage trouvé pour ces critères.'
                 ]);
                 return;
             }
@@ -248,7 +207,6 @@ class CovoituragesController
                 'count'   => count($covoiturages),
                 'data'    => $covoiturages
             ]);
-
         } catch (\Throwable $e) {
             error_log('Erreur rechercheLarge covoiturages : ' . $e->getMessage());
             echo json_encode([
@@ -257,7 +215,6 @@ class CovoituragesController
             ]);
         }
     }
-
 
     /*******************************
      * Autocompletion des villes
@@ -288,11 +245,10 @@ class CovoituragesController
             error_log('autocompleteVilles error: ' . $e->getMessage());
             echo json_encode([]);
         }
-        exit;
     }
 
     /************************************
-     * Récupérer tous les covoiturages
+     * Récupérer tous les covoiturages d'un utilisateur
      ************************************/
     public function getCovoituragesByUtilisateur(int $userId): array
     {
@@ -309,13 +265,9 @@ class CovoituragesController
         require_once __DIR__ . '/../View/covoiturages/liste_covoiturages.php';
     }
 
-    public function resultatsRecherche(): void
-    {
-        $covoiturages = $this->repo->getAllCovoiturages();
-
-        require_once __DIR__ . '/../View/partials/resultats_covoiturages.php';
-    }
-
+    /************************************
+     * Détail covoiturage
+     ************************************/
     public function showDetails()
     {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -323,7 +275,8 @@ class CovoituragesController
         if ($id <= 0) {
             $covoiturage = null;
         } else {
-            $covoiturage = $this->repo->getCovoiturageByUtilisateur($id);
+            // Utiliser la méthode correcte du repo
+            $covoiturage = $this->repo->getCovoiturageById($id);
         }
 
         if (!$covoiturage) {
@@ -348,9 +301,15 @@ class CovoituragesController
         }
 
         try {
-            $covoiturage = $this->repo->getCovoiturageByUtilisateur($idCovoiturage);
+            $covoiturage = $this->repo->getCovoiturageById($idCovoiturage);
             if (!$covoiturage) {
                 echo json_encode(['success' => false, 'message' => 'Covoiturage introuvable.']);
+                return;
+            }
+
+            // Optionnel : vérifier s'il reste des places
+            if ((int)$covoiturage['nb_places'] <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Plus de places disponibles.']);
                 return;
             }
 
@@ -358,15 +317,37 @@ class CovoituragesController
             $this->repo->updateStatutCovoiturage($idCovoiturage, 'réservé');
 
             echo json_encode(['success' => true, 'message' => 'Covoiturage réservé avec succès !']);
-
         } catch (\Throwable $e) {
             error_log('Erreur réservation covoiturage : ' . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Erreur serveur.']);
         }
     }
 
+    /**
+     * Affiche le formulaire de recherche (simple)
+     */
+    public function formRechercheCovoiturages(): void
+    {
+        require_once __DIR__ . '/../View/partials/formulaire_recherche_covoiturages.php';
+    }
 
+    /**
+     * Recherche et affiche les résultats sur une page Résultats (utilise $_GET pour partage d'URL)
+     */
+    public function resultatsRecherche(): void
+    {
+        $ville = $_GET['ville_depart'] ?? $_GET['ville_arrivee'] ?? '';
 
+        $covoiturages = [];
+
+        if (!empty($ville)) {
+            // Appel de la recherche souple
+            $covoiturages = $this->repo->rechercherCovoituragesParVilleUnique($ville);
+        }
+
+        // Inclure la vue avec les résultats
+        require __DIR__ . '/../View/covoiturages/resultats_recherches_covoiturages.php';
+    }
 
 
 

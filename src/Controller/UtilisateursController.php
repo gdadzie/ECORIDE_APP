@@ -76,42 +76,65 @@ class UtilisateursController
     //-------------------- CONNECTION DE L'UTILISATEUR --------------------//
     public function login(): void
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $message = '';
+        $max_attempts = 5;
+        $lockout_time = 300; // 5 minutes
+
+        if (!isset($_SESSION['login_attempts'])) {
+            $_SESSION['login_attempts'] = 0;
+            $_SESSION['last_attempt_time'] = time();
+        }
+
+        if ($_SESSION['login_attempts'] >= $max_attempts) {
+            $elapsed = time() - $_SESSION['last_attempt_time'];
+            if ($elapsed < $lockout_time) {
+                $minutes = ceil(($lockout_time - $elapsed) / 60);
+                $message = "Trop de tentatives échouées. Réessayez dans $minutes minute(s).";
+                require_once __DIR__ . '/../View/accueil/se_connecter.php';
+                return;
+            } else {
+                $_SESSION['login_attempts'] = 0;
+            }
+        }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $identifiant = trim($_POST['identifiant'] ?? ''); // email ou pseudo
+            $identifiant = trim($_POST['identifiant'] ?? '');
             $mdp = $_POST['mdp'] ?? '';
 
             if (empty($identifiant) || empty($mdp)) {
                 $message = "Veuillez renseigner tous les champs.";
             } else {
-                // Recherche par email OU pseudo
-                $user = $this->repo->findByEmailOrPseudo($identifiant, $identifiant);
+                $user = $this->repo->findUserByEmailOrPseudo($identifiant);
 
-                if ($user === null) {
+
+                if (!($user instanceof \Entity\Utilisateur)) {
                     $message = "Email ou pseudo incorrect.";
+                    $_SESSION['login_attempts']++;
+                    $_SESSION['last_attempt_time'] = time();
+                } elseif (password_verify($mdp, $user->getMdp())) {
+                    $_SESSION['login_attempts'] = 0;
+                    $_SESSION['user'] = $user;
+                    $_SESSION['user_id'] = $user->getIdUtilisateur();
+                    $_SESSION['pseudo'] = $user->getPseudo();
+                    header('Location: index.php?entity=utilisateurs&action=tableau_de_bord');
+                    exit;
                 } else {
-                    // Vérifie le mot de passe
-                    if (password_verify($mdp, $user->getMdp())) {
-
-                        // ✅ Stocke l'utilisateur dans la session
-                        $_SESSION['user'] = $user;
-                        $_SESSION['user_id'] = $user->getIdUtilisateur(); // <--- ligne ajoutée
-                        $_SESSION['pseudo'] = $user->getPseudo();
-
-                        // Redirige vers le tableau de bord
-                        header('Location: index.php?entity=utilisateurs&action=tableau_de_bord');
-                        exit;
-                    } else {
-                        $message = "Mot de passe incorrect.";
-                    }
+                    $message = "Mot de passe incorrect.";
+                    $_SESSION['login_attempts']++;
+                    $_SESSION['last_attempt_time'] = time();
                 }
             }
         }
 
-        // Affiche la vue du formulaire de connexion
         require_once __DIR__ . '/../View/accueil/se_connecter.php';
     }
+
+
+
 
     //-------------------- TABLEAU DE BORD --------------------//
     public function dashboard(): void
@@ -152,7 +175,7 @@ class UtilisateursController
             $searchEmail = trim($_GET['email'] ?? '');
 
             if ($searchEmail !== '') {
-                $utilisateurs = $this->repo->findByEmailPart($searchEmail);
+                $utilisateurs = $this->repo->findByEmail($searchEmail);
             } else {
                 $utilisateurs = $this->repo->findAll();
             }
@@ -299,7 +322,7 @@ class UtilisateursController
                     $data['telephone'] ?? '',
                     $data['mdp'] ?? '',
                     $data['role'] ?? 'user',
-                    $data['type_covoiturage'] ?? 'passager',
+                    $data['type_utilisateur'] ?? 'passager',
                     $data['actif'] ?? 1,
                     $data['photo'] ?? '',
                     $data['date_creation'] ?? ''
@@ -342,6 +365,36 @@ class UtilisateursController
     {
         require __DIR__ . '/../View/utilisateurs/admin/espace_admin.php';
     }
+
+    public function updateProfilUtilisateur(): void
+    {
+        session_start();
+
+        $userId = $_SESSION['user_id'] ?? null;
+        if (!$userId) {
+            header('Location: index.php?entity=accueil&action=se_connecter');
+            exit;
+        }
+
+        $utilisateur = $this->repo->findById($userId);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $utilisateur->setNom($_POST['nom'] ?? '');
+            $utilisateur->setPrenom($_POST['prenom'] ?? '');
+            $utilisateur->setTelephone($_POST['telephone'] ?? '');
+            $utilisateur->setTypeUtilisateur($_POST['type_utilisateur'] ?? 'passager');
+
+            if ($this->repo->updateUtilisateur($utilisateur)) {
+                $message = "✅ Profil mis à jour avec succès !";
+            } else {
+                $message = "❌ Erreur lors de la mise à jour du profil : " . $this->repo->getLastError();
+            }
+        }
+
+        require __DIR__ . '/../View/utilisateurs/mise_a_jour_profil.php';
+    }
+
+
 
 
 
