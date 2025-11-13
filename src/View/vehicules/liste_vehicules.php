@@ -30,11 +30,11 @@
 
     <!-- Filtres -->
     <div class="row mb-3 g-2">
-        <div class="col-md-3"><input type="text" id="filter-marque" class="form-control" placeholder="Filtrer par marque"></div>
-        <div class="col-md-3"><input type="text" id="filter-modele" class="form-control" placeholder="Filtrer par modèle"></div>
-        <div class="col-md-3"><input type="text" id="filter-couleur" class="form-control" placeholder="Filtrer par couleur"></div>
+        <div class="col-md-3"><label for="filter-marque"></label><input type="text" id="filter-marque" class="form-control" placeholder="Filtrer par marque"></div>
+        <div class="col-md-3"><label for="filter-modele"></label><input type="text" id="filter-modele" class="form-control" placeholder="Filtrer par modèle"></div>
+        <div class="col-md-3"><label for="filter-couleur"></label><input type="text" id="filter-couleur" class="form-control" placeholder="Filtrer par couleur"></div>
         <div class="col-md-3">
-            <select id="filter-energie" class="form-select">
+            <label for="filter-energie"></label><select id="filter-energie" class="form-select">
                 <option value="">Filtrer par énergie</option>
                 <option value="Essence">Essence</option>
                 <option value="Diesel">Diesel</option>
@@ -54,7 +54,7 @@
                 <table id="vehiculesTable" class="table table-hover align-middle text-center">
                     <thead style="background-color: #00C853; color: #FFFFFF;">
                     <tr>
-                        <th><input type="checkbox" id="select-all"></th>
+                        <th><label for="select-all"></label><input type="checkbox" id="select-all"></th>
                         <th class="fw-bold">#</th>
                         <th class="fw-bold">Marque</th>
                         <th class="fw-bold">Modèle</th>
@@ -67,7 +67,9 @@
                     <tbody>
                     <?php foreach ($vehicules as $index => $v): ?>
                         <tr style="color: #212121;">
-                            <td><input type="checkbox" class="select-row" name="ids[]" value="<?= $v->getIdVehicule() ?>"></td>
+                            <td><label>
+                                    <input type="checkbox" class="select-row" name="ids[]" value="<?= $v->getIdVehicule() ?>">
+                                </label></td>
                             <td><?= $index + 1 ?></td>
                             <td><?= htmlspecialchars($v->getNomMarque()) ?></td>
                             <td><?= htmlspecialchars($v->getModele()) ?></td>

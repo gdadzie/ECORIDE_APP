@@ -1,0 +1,215 @@
+/* =======================
+   Thème Echolide (vert)
+   ======================= */
+
+/* Cartes covoiturage */
+.card-body {
+    background-color: #eafaf1; /* fond vert clair */
+}
+
+.card-title {
+    font-weight: bold;
+    color: #28a745; /* vert Echolide */
+}
+
+.card-text {
+    color: #2d2d2d;
+}
+
+/* Boutons */
+.btn-outline-success {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.btn-outline-success:hover {
+    background-color: #28a745;
+    color: #fff;
+}
+
+/* Loader vert */
+.spinner-border.text-success {
+    color: #28a745 !important;
+}
+
+/* Alertes */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffeeba;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+/* Autocompletion */
+.list-group-item-action:hover {
+    background-color: #d4edda;
+    cursor: pointer;
+}
+/* ============================= */
+/* 🔹 Thème Echolide - vert */
+/* ============================= */
+
+/* Corps de page / container */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f8f5;
+    color: #2e2e2e;
+}
+
+/* Formulaire recherche */
+.formulaire-recherche {
+    position: absolute;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    top: 450px;
+
+
+}
+
+.form-label {
+    font-weight: 500;
+    color: #2e2e2e;
+}
+
+/* Boutons */
+.btn-search {
+    background-color: #28a745; /* vert Echolide */
+    color: #fff;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-search:hover {
+    background-color: #218838;
+    color: #fff;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.btn-reserver, .btn-confirmer {
+    min-width: 90px;
+}
+
+/* Loader */
+#loader {
+    font-size: 1rem;
+    color: #28a745;
+}
+
+/* Cartes covoiturages */
+.card {
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* Titres cartes */
+.card-title {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* Card footer boutons */
+.card-footer {
+    border-top: none;
+    background-color: #f8f9fa;
+}
+
+/* Liste d'autocomplétion */
+.list-group {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+/* Messages alertes */
+.alert {
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 500;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-title {
+        font-size: 1rem;
+    }
+
+    .formulaire-recherche {
+        padding: 15px;
+    }
+}
+.hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 16px rgba(0, 128, 0, 0.2);
+}
+.card {
+    max-width: 500px;
+    margin: auto;
+}
+.card-body {
+    padding: 1rem;
+}
+.card img {
+    border-radius: 50%;
+}
+@media (max-width: 576px) {
+    .card {
+        max-width: 100%;
+    }
+}

@@ -1,21 +1,12 @@
 <?php
-namespace Controller;
+namespace Controller\Accueil;
 
 
-require_once __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../Entity/Utilisateur.php';
-require_once __DIR__ . '/../Repository/UtilisateursRepository.php';
-require_once __DIR__ . '/../Repository/CovoituragesRepository.php';
-require_once __DIR__ . '/../../Config/Database.php';
-
-use Config\Database;
-use Entity\Utilisateur;
-use Repository\UtilisateursRepository;
-use Entity\Covoiturage;
-use Repository\CovoituragesRepository;
-use Repository\VehiculesRepository;
-use PDO;
-use JetBrains\PhpStorm\NoReturn;
+require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__ . '/../../Entity/Utilisateur.php';
+require_once __DIR__ . '/../../Repository/UtilisateursRepository.php';
+require_once __DIR__ . '/../../Repository/CovoituragesRepository.php';
+require_once __DIR__ . '/../../../Config/Database.php';
 
 class AccueilController
 {
@@ -23,19 +14,19 @@ class AccueilController
     //-------------------- ACCES A LA PAGE D ACCUEIL --------------------//
     public function index(): void       // Route vers la page d'accueil de l'application Ecoride
     {
-        require __DIR__ . '/../View/accueil/index.php';
+        require __DIR__ . '/../../View/accueil/index.php';
     }
     //-------------------- DECONNEXION --------------------//
     public function logout(): void
     {
-        require __DIR__ . '/../View/accueil/index.php';
+        require __DIR__ . '/../../View/accueil/index.php';
 
     }
 
     //-------------------- ACCES A LA PAGE CONTACT --------------------//
     public function contact(): void
     {
-        require __DIR__ . '/../View/accueil/contact.php';
+        require __DIR__ . '/../../View/accueil/contact.php';
     }
 
 
@@ -43,13 +34,13 @@ class AccueilController
 
     public function covoiturage(): void
     {
-        require __DIR__ . '/../View/accueil/convoiturages.php';
+        require __DIR__ . '/../../View/accueil/convoiturages.php';
     }
 
     //-------------------- ACCES A LA PAGE CONNEXION --------------------//
     public function pageConnexion(): void
     {
-        require __DIR__ . '/../View/accueil/se_connecter.php';
+        require __DIR__ . '/../../View/accueil/se_connecter.php';
     }
 
     //-------------------- ACCES A LA PAGE CREER COMPTE --------------------//
@@ -66,13 +57,13 @@ class AccueilController
 
     public function mentionsLegales(): void
     {
-        require __DIR__ . '/../View/accueil/mentions_legales.php';
+        require __DIR__ . '/../../View/accueil/mentions_legales.php';
     }
 
 
     public function grace(): void
     {
-        require __DIR__ . '/../View/accueil/dashboard.php';
+        require __DIR__ . '/../../View/accueil/dashboard.php';
     }
 
 

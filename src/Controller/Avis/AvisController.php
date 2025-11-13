@@ -1,5 +1,5 @@
 <?php
-namespace Controller;
+namespace Controller\Avis;
 
 use Entity\Avis;
 use Repository\AvisRepository;
@@ -34,6 +34,13 @@ class AvisController
             }
         }
 
-        require_once __DIR__ . '/../View/Avis/liste_avis.php';
+        require_once __DIR__ . '/../../View/Avis/liste_avis.php';
+    }
+
+    public function showAvis()
+    {
+
+
+        require_once __DIR__ . '/../../View/Avis/liste_avis.php';
     }
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace Repository;
 
 use Config\Database;
@@ -8,9 +7,15 @@ use PDOException;
 
 class CovoituragesRepository
 {
+    // ===============================
+    // Propriétés
+    // ===============================
     private ?PDO $conn = null;
     private ?string $lastError = null;
 
+    // ===============================
+    // Constructeur
+    // ===============================
     public function __construct()
     {
         $this->conn = Database::getConnection();
@@ -20,11 +25,17 @@ class CovoituragesRepository
         }
     }
 
+    // ===============================
+    // UTILITAIRES
+    // ===============================
     public function getLastError(): ?string
     {
         return $this->lastError;
     }
 
+    // ===============================
+    // CREATION DE COVOITURAGE
+    // ===============================
     /**
      * Créer un covoiturage (attend une Entity\Covoiturage)
      */
@@ -49,8 +60,7 @@ class CovoituragesRepository
                 ':duree_minutes' => $covoiturage->getDureeMinutes(),
                 ':statut' => $covoiturage->getStatut()
             ]);
-            $covoiturageId = (int)$this->conn->lastInsertId();
-            $covoiturage->setIdCovoiturage($covoiturageId);
+            $covoiturage->setIdCovoiturage((int)$this->conn->lastInsertId());
             return true;
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
@@ -59,8 +69,12 @@ class CovoituragesRepository
         }
     }
 
+    // ===============================
+    // RECUPERATION COVOITURAGES
+    // ===============================
+
     /**
-     * Récupérer tous les covoiturages (avec noms de villes)
+     * Récupérer tous les covoiturages avec noms des villes
      */
     public function getAllCovoiturages(): array
     {
@@ -80,14 +94,61 @@ class CovoituragesRepository
     }
 
     /**
-     * Recherche souple par ville de départ / arrivée et date optionnelle
+     * Récupérer un covoiturage par son ID
+     */
+    public function getCovoiturageById(int $id): ?array
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom, u.pseudo
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+                WHERE c.id_covoiturage = :id
+            ");
+            $stmt->execute([':id' => $id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ?: null;
+        } catch (PDOException $e) {
+            $this->lastError = $e->getMessage();
+            error_log('Erreur getCovoiturageById : ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Récupérer covoiturages par utilisateur
+     */
+    public function getCovoituragesByUtilisateur(int $userId): array
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
+                FROM covoiturages c
+                JOIN villes vd ON c.ville_depart = vd.id_ville
+                JOIN villes va ON c.ville_arrivee = va.id_ville
+                WHERE c.id_utilisateur = :userId
+                ORDER BY c.date_depart DESC
+            ");
+            $stmt->execute([':userId' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('Erreur getCovoituragesByUtilisateur: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    // ===============================
+    // RECHERCHES FLEXIBLES
+    // ===============================
+    /**
+     * Recherche souple par ville départ/arrivée et date optionnelle
      */
     public function rechercherCovoituragesSouples(string $villeDepart = '', string $villeArrivee = '', ?string $dateDepart = null): array
     {
         $sql = "
-            SELECT c.*, 
-                   vd.nom_ville AS ville_depart_nom, 
-                   va.nom_ville AS ville_arrivee_nom
+            SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
             FROM covoiturages c
             JOIN villes vd ON c.ville_depart = vd.id_ville
             JOIN villes va ON c.ville_arrivee = va.id_ville
@@ -118,58 +179,55 @@ class CovoituragesRepository
         }
     }
 
-    /**
-     * Récupérer covoiturage par id
-     */
-    public function getCovoiturageById(int $id): ?array
+    public function rechercherCovoituragesParVilles(string $villeDepart, string $villeArrivee): array
     {
-        try {
-            $stmt = $this->conn->prepare("
-            SELECT c.*, 
-                   vd.nom_ville AS ville_depart_nom, 
-                   va.nom_ville AS ville_arrivee_nom,
-                   u.pseudo
+        $sql = "
+            SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom, u.pseudo
             FROM covoiturages c
             JOIN villes vd ON c.ville_depart = vd.id_ville
             JOIN villes va ON c.ville_arrivee = va.id_ville
             JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
-            WHERE c.id_covoiturage = :id
-        ");
-            $stmt->execute([':id' => $id]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result ?: null;
-        } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
-            error_log('Erreur getCovoiturageById : ' . $e->getMessage());
-            return null;
+            WHERE 1=1 AND c.nb_places > 0
+        ";
+
+        $params = [];
+        if ($villeDepart !== '') {
+            $sql .= " AND vd.nom_ville LIKE :ville_depart";
+            $params[':ville_depart'] = '%' . $villeDepart . '%';
         }
+        if ($villeArrivee !== '') {
+            $sql .= " AND va.nom_ville LIKE :ville_arrivee";
+            $params[':ville_arrivee'] = '%' . $villeArrivee . '%';
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-    /**
-     * Récupérer covoiturages par utilisateur
-     */
-    public function getCovoituragesByUtilisateur(int $userId): array
+    public function rechercherCovoituragesParVilleUnique(string $ville): array
     {
-        try {
-            $stmt = $this->conn->prepare("
-                SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
-                FROM covoiturages c
-                JOIN villes vd ON c.ville_depart = vd.id_ville
-                JOIN villes va ON c.ville_arrivee = va.id_ville
-                WHERE c.id_utilisateur = :userId
-                ORDER BY c.date_depart DESC
-            ");
-            $stmt->execute([':userId' => $userId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('Erreur getCovoituragesByUtilisateur: ' . $e->getMessage());
-            return [];
-        }
+        $sql = "
+            SELECT c.*, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom, u.pseudo
+            FROM covoiturages c
+            JOIN villes vd ON c.ville_depart = vd.id_ville
+            JOIN villes va ON c.ville_arrivee = va.id_ville
+            JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+            WHERE vd.nom_ville LIKE :ville OR va.nom_ville LIKE :ville
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':ville' => '%' . $ville . '%']);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // ===============================
+    // FILTRAGE
+    // ===============================
     /**
-     * Filtrer par covoiturages écologiques (ecologique = 1 ou 0)
+     * Filtrer covoiturages écologiques
      */
     public function filterByEcologique(int $ecologique = 1): array
     {
@@ -190,6 +248,9 @@ class CovoituragesRepository
         }
     }
 
+    // ===============================
+    // MISE À JOUR
+    // ===============================
     /**
      * Mettre à jour le statut d'un covoiturage
      */
@@ -205,60 +266,4 @@ class CovoituragesRepository
             return false;
         }
     }
-
-    public function rechercherCovoituragesParVilles(string $villeDepart, string $villeArrivee): array
-    {
-        $sql = "
-        SELECT c.*,
-               vd.nom_ville AS ville_depart_nom,
-               va.nom_ville AS ville_arrivee_nom,
-               u.pseudo
-        FROM covoiturages c
-        JOIN villes vd ON c.ville_depart = vd.id_ville
-        JOIN villes va ON c.ville_arrivee = va.id_ville
-        JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
-        WHERE 1=1
-          AND c.nb_places > 0
-    ";
-
-        $params = [];
-
-        if ($villeDepart !== '') {
-            $sql .= " AND vd.nom_ville LIKE :ville_depart";
-            $params[':ville_depart'] = '%' . $villeDepart . '%';
-        }
-
-        if ($villeArrivee !== '') {
-            $sql .= " AND va.nom_ville LIKE :ville_arrivee";
-            $params[':ville_arrivee'] = '%' . $villeArrivee . '%';
-        }
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($params);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function rechercherCovoituragesParVilleUnique(string $ville): array
-    {
-        $sql = "
-        SELECT c.*,
-               vd.nom_ville AS ville_depart_nom,
-               va.nom_ville AS ville_arrivee_nom,
-               u.pseudo
-        FROM covoiturages c
-        JOIN villes vd ON c.ville_depart = vd.id_ville
-        JOIN villes va ON c.ville_arrivee = va.id_ville
-        JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
-        WHERE vd.nom_ville LIKE :ville OR va.nom_ville LIKE :ville
-    ";
-
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':ville' => '%' . $ville . '%']);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-
-
 }

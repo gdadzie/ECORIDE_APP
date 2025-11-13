@@ -9,17 +9,26 @@ use RuntimeException;
 
 class UtilisateursRepository
 {
+    // ===============================
+    // Propriétés
+    // ===============================
     private PDO $conn;
     private ?string $lastError = null;
 
+    // ===============================
+    // Constructeur
+    // ===============================
     public function __construct(PDO $conn)
     {
         $this->conn = $conn;
     }
 
-    //-------------------- CREER UN NOUVEL UTILISATEUR --------------------//
-
+    // ===============================
+    // CREATION D’UN UTILISATEUR
+    // ===============================
     /**
+     * Crée un nouvel utilisateur en BDD.
+     *
      * @throws Exception
      */
     public function create(Utilisateur $user): void
@@ -62,7 +71,9 @@ class UtilisateursRepository
         }
     }
 
-    //-------------------- EXISTE PAR EMAIL OU PSEUDO --------------------//
+    // ===============================
+    // VERIFICATION EXISTENCE EMAIL / PSEUDO
+    // ===============================
     public function findByEmailOrPseudo(string $email, string $pseudo): bool
     {
         $stmt = $this->conn->prepare("
@@ -78,63 +89,62 @@ class UtilisateursRepository
         return (bool) $stmt->fetchColumn();
     }
 
-    //-------------------- METTRE À JOUR UN UTILISATEUR --------------------//
+    // ===============================
+    // MISE À JOUR D’UN UTILISATEUR
+    // ===============================
     public function updateUtilisateur(Utilisateur $utilisateur): bool
     {
         try {
-            // Validation côté entité
             $utilisateur->validate();
-
-            // --- GESTION DE L’UPLOAD PHOTO --- //
             $photoPath = $utilisateur->getPhoto();
 
+            // Gestion upload photo si présent
             if (!empty($_FILES['photo']['tmp_name'])) {
-                // Dossier d’upload complet basé sur la racine du projet
-                $dossier = __DIR__ . '/../../public/uploads/photos/';
+                $photo = $_FILES['photo'];
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-                // Vérifie ou crée le dossier
-                if (!is_dir($dossier)) {
-                    if (!mkdir($dossier, 0777, true)) {
-                        throw new Exception("Impossible de créer le dossier d'upload : " . $dossier);
-                    }
+                if (!in_array($photo['type'], $allowedTypes) || $photo['size'] > 2 * 1024 * 1024) {
+                    throw new Exception("Format ou taille de fichier invalide (max 2 Mo, JPG/PNG/GIF).");
                 }
 
-                // Vérifie l’accès en écriture
+                $ext = pathinfo($photo['name'], PATHINFO_EXTENSION);
+                $dossier = __DIR__ . '/../../public/uploads/photos/';
+                $newFileName = 'user_' . $utilisateur->getIdUtilisateur() . '.' . $ext;
+                $cheminComplet = $dossier . $newFileName;
+
+                if (!is_dir($dossier) && !mkdir($dossier, 0755, true)) {
+                    throw new Exception("Impossible de créer le dossier d'upload : " . $dossier);
+                }
+
                 if (!is_writable($dossier)) {
                     throw new Exception("Le dossier d'upload n'est pas accessible en écriture : " . $dossier);
                 }
 
-                // Vérifie les erreurs PHP d’upload
-                if ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
-                    throw new Exception("Erreur lors de l'upload (code PHP : " . $_FILES['photo']['error'] . ")");
+                $anciennePhoto = $utilisateur->getPhoto();
+                if ($anciennePhoto && $anciennePhoto !== '/uploads/photos/default-avatar.jpg') {
+                    $anciennePhotoPath = __DIR__ . '/../../public' . $anciennePhoto;
+                    if (file_exists($anciennePhotoPath)) {
+                        unlink($anciennePhotoPath);
+                    }
                 }
 
-                // Nettoyage du nom et création d’un nom unique
-                $nomFichier = uniqid('photo_', true) . "_" . basename($_FILES['photo']['name']);
-                $cheminComplet = $dossier . $nomFichier;
-
-                // Déplace le fichier temporaire
-                if (!move_uploaded_file($_FILES['photo']['tmp_name'], $cheminComplet)) {
+                if (!move_uploaded_file($photo['tmp_name'], $cheminComplet)) {
                     throw new Exception("Erreur lors de l'enregistrement de la photo : " . $cheminComplet);
                 }
 
-                // Convertit le chemin pour l’accès web (stocké en relatif)
-                $photoPath = 'uploads/photos/' . $nomFichier;
+                $photoPath = '/uploads/photos/' . $newFileName;
                 $utilisateur->setPhoto($photoPath);
             }
 
-
-            // Prépare la requête
             $sql = "UPDATE utilisateurs
-                SET nom = :nom,
-                    prenom = :prenom,
-                    telephone = :telephone,
-                    type_utilisateur = :type_utilisateur,
-                    photo = :photo
-                WHERE id_utilisateur = :id_utilisateur";
+                    SET nom = :nom,
+                        prenom = :prenom,
+                        telephone = :telephone,
+                        type_utilisateur = :type_utilisateur,
+                        photo = :photo
+                    WHERE id_utilisateur = :id_utilisateur";
 
             $stmt = $this->conn->prepare($sql);
-
             $success = $stmt->execute([
                 ':nom' => $utilisateur->getNom(),
                 ':prenom' => $utilisateur->getPrenom(),
@@ -147,6 +157,7 @@ class UtilisateursRepository
             if (!$success) {
                 $this->lastError = implode(', ', $stmt->errorInfo());
             }
+
             error_log("Upload photo OK : " . $photoPath);
 
             return $success;
@@ -158,7 +169,38 @@ class UtilisateursRepository
         }
     }
 
-    //-------------------- RECUPERER UN UTILISATEUR PAR ID --------------------//
+    /**
+     * Upload spécifique de photo pour AvatarController
+     */
+    public function uploadPhotoUtilisateur(Utilisateur $utilisateur, array $file): void
+    {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($file['type'], $allowedTypes) || $file['size'] > 2 * 1024 * 1024) {
+            throw new Exception("Format ou taille de fichier invalide (max 2 Mo, JPG/PNG/GIF).");
+        }
+
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception("Erreur lors de l'upload (code PHP : " . $file['error'] . ")");
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $newFileName = 'user_' . $utilisateur->getIdUtilisateur() . '_' . time() . '.' . $ext;
+        $uploadDir = __DIR__ . '/../../public/uploads/photos/';
+        $uploadPath = $uploadDir . $newFileName;
+
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        if (!is_writable($uploadDir)) throw new Exception("Le dossier d'upload n'est pas accessible en écriture : " . $uploadDir);
+
+        if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            throw new Exception("Impossible de déplacer le fichier uploadé.");
+        }
+
+        $utilisateur->setPhoto('/uploads/photos/' . $newFileName);
+    }
+
+    // ===============================
+    // RECUPERATION UTILISATEUR
+    // ===============================
     public function findById(int $id): ?Utilisateur
     {
         try {
@@ -166,25 +208,8 @@ class UtilisateursRepository
             $stmt->execute([':id' => $id]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($data) {
-                $user = new Utilisateur(
-                    $data['nom'] ?? '',
-                    $data['prenom'] ?? '',
-                    $data['pseudo'] ?? '',
-                    $data['email'] ?? '',
-                    $data['telephone'] ?? '',
-                    $data['mdp'] ?? '',
-                    $data['role'] ?? 'user',
-                    $data['type_utilisateur'] ?? 'passager',
-                    $data['actif'] ?? 1,
-                    $data['photo'] ?? '',
-                    $data['date_creation'] ?? ''
-                );
-                $user->setIdUtilisateur((int)$data['id_utilisateur']);
-                return $user;
-            }
+            return $data ? $this->mapRowToUtilisateur($data) : null;
 
-            return null;
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
             error_log("Erreur findById Utilisateur : " . $e->getMessage());
@@ -192,7 +217,20 @@ class UtilisateursRepository
         }
     }
 
-    //-------------------- RECUPERER TOUS LES UTILISATEURS --------------------//
+    public function findUserByEmailOrPseudo(string $emailOrPseudo): ?Utilisateur
+    {
+        $stmt = $this->conn->prepare("
+            SELECT * 
+            FROM utilisateurs 
+            WHERE email = :val OR pseudo = :val
+            LIMIT 1
+        ");
+        $stmt->execute([':val' => trim($emailOrPseudo)]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? $this->mapRowToUtilisateur($row) : null;
+    }
+
     public function findAll(): array
     {
         $stmt = $this->conn->prepare("SELECT * FROM utilisateurs");
@@ -203,11 +241,12 @@ class UtilisateursRepository
         foreach ($rows as $row) {
             $utilisateurs[] = $this->mapRowToUtilisateur($row);
         }
-
         return $utilisateurs;
     }
 
-    //-------------------- SUPPRIMER UN UTILISATEUR --------------------//
+    // ===============================
+    // SUPPRESSION UTILISATEUR
+    // ===============================
     public function delete(int $id_utilisateur): bool
     {
         try {
@@ -220,13 +259,15 @@ class UtilisateursRepository
         }
     }
 
-    //-------------------- GET LAST ERROR --------------------//
+    // ===============================
+    // UTILITAIRES
+    // ===============================
     public function getLastError(): ?string
     {
         return $this->lastError;
     }
 
-    //-------------------- PRIVATE : MAP ROW TO UTILISATEUR --------------------//
+    // Mapping row BDD → Entité Utilisateur
     private function mapRowToUtilisateur(array $row): Utilisateur
     {
         $user = new Utilisateur(
@@ -245,23 +286,4 @@ class UtilisateursRepository
         $user->setIdUtilisateur((int)$row['id_utilisateur']);
         return $user;
     }
-
-    public function findUserByEmailOrPseudo(string $emailOrPseudo): ?Utilisateur
-    {
-        $stmt = $this->conn->prepare("
-        SELECT * 
-        FROM utilisateurs 
-        WHERE email = :val OR pseudo = :val
-        LIMIT 1
-    ");
-        $stmt->execute([':val' => trim($emailOrPseudo)]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($row) {
-            return $this->mapRowToUtilisateur($row);
-        }
-
-        return null;
-    }
-
 }
