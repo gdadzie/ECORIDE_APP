@@ -12,7 +12,7 @@
     <input type="hidden" name="action" value="resultats_recherche">
 
     <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Ville de départ</label>
             <input type="text" name="ville_depart" id="ville_depart" class="form-control" placeholder="Ex : Paris">
         </div>
@@ -22,9 +22,9 @@
         </div>
         <div class="col-md-3">
             <label class="form-label">Date</label>
-            <input type="date" name="date_depart" class="form-control">
+            <input type="date" name="date_depart" class="form-control" id="date_depart">
         </div>
-        <div class="col-md-1 d-flex align-items-end">
+        <div class="col-md-3 d-flex align-items-end">
             <button type="submit" class="btn btn-search me-2">
                 <i class="bi bi-search"></i> Rechercher
             </button>
@@ -33,3 +33,18 @@
 </form>
 
 <script src="assets/js/covoiturages/formulaire_recherche_covoiturages.js"></script>
+
+<script>
+    // Définir la date minimale à aujourd'hui
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('date_depart');
+    dateInput.setAttribute('min', today);
+
+    // Validation supplémentaire lors de la soumission
+    $('#form-recherche').on('submit', function(e) {
+        if (dateInput.value < today) {
+            e.preventDefault(); // Empêche l'envoi du formulaire
+            alert('Veuillez sélectionner une date valide (aujourd’hui ou ultérieure).');
+        }
+    });
+</script>

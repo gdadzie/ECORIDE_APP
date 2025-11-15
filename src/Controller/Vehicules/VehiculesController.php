@@ -1,8 +1,8 @@
 <?php
-namespace Controller;
+namespace Controller\Vehicules;
 
-use Repository\VehiculesRepository;
 use JetBrains\PhpStorm\NoReturn;
+use Repository\VehiculesRepository;
 
 class VehiculesController
 {
@@ -26,7 +26,7 @@ class VehiculesController
         }
 
         $vehicules = $this->repo->getVehiculesByUtilisateur($idUtilisateur);
-        require_once __DIR__ . '/../View/vehicules/liste_vehicules.php';
+        require_once __DIR__ . '/../../View/vehicules/liste_vehicules.php';
     }
 
     // ================= Ajouter un véhicule =================
@@ -71,7 +71,7 @@ class VehiculesController
         }
 
         $vehicules = $this->repo->getVehiculesByUtilisateur($idUtilisateur);
-        require_once __DIR__ . '/../View/vehicules/ajouter_vehicule.php';
+        require_once __DIR__ . '/../../View/vehicules/ajouter_vehicule.php';
     }
 
     // ================= Supprimer un véhicule =================

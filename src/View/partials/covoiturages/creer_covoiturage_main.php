@@ -1,6 +1,6 @@
 <?php
-include __DIR__ . '/../layout.php';
-include __DIR__ . '/../partials/header.php';
+include __DIR__ . '/../../layout.php';
+include __DIR__ . '/../../partials/header.php';
 
 // 🔹 Guard pour éviter "Undefined variable"
 if (!isset($villes)) {
@@ -88,7 +88,7 @@ if (!isset($villes)) {
                         <?php if (!empty($vehicules)): ?>
                             <?php foreach ($vehicules as $v): ?>
                                 <option value="<?= (int) $v->getIdVehicule() ?>">
-                                    <?= htmlspecialchars($v->getNomMarque() . ' ' . $v->getModele() . ' (' . $v->getImmatriculation() . ')') ?>
+                                    <?= htmlspecialchars($v->getNomMarque()  . $v->getModele() . ' (' . $v->getImmatriculation() . ')') ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php else: ?>
