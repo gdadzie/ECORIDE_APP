@@ -4,17 +4,20 @@ namespace Controller\Covoiturages;
 use Entity\Covoiturage;
 use Repository\CovoituragesRepository;
 use Repository\UtilisateursRepository;
+use Repository\AvisRepository;
 
 class CovoituragesDisplayController
 {
     private CovoituragesRepository $covoituragesRepo;
     private UtilisateursRepository $utilisateursRepo;
+    private AvisRepository $avisRepo;
     private ?Covoiturage $covoiturage = null;
 
-    public function __construct(CovoituragesRepository $covoituragesRepo, UtilisateursRepository $utilisateursRepo)
+    public function __construct(CovoituragesRepository $covoituragesRepo, UtilisateursRepository $utilisateursRepo, AvisRepository $avisRepo)
     {
         $this->covoituragesRepo = $covoituragesRepo;
         $this->utilisateursRepo = $utilisateursRepo;
+        $this->avisRepo = new AvisRepository();
 
     }
 
@@ -37,10 +40,10 @@ class CovoituragesDisplayController
      */
     public function showDetails(): void
     {
-
+        // 1️⃣ Récupération de l'ID du covoiturage depuis l'URL
         $id = intval($_GET['id'] ?? 0);
 
-        // Récupération entité
+        // 2️⃣ Récupération de l'entité covoiturage
         $covoiturage = $this->covoituragesRepo->getEntityById($id);
 
         if (!$covoiturage) {
@@ -48,15 +51,21 @@ class CovoituragesDisplayController
             return;
         }
 
-        // Calcul de l'heure d'arrivée dans l'objet
+        // 3️⃣ Calcul de l'heure d'arrivée (méthode de l'entité)
         $covoiturage->calculerHeureArrivee();
 
-        // On rend l'objet disponible dans la vue
-        $this->covoiturage = $covoiturage;
+        // 4️⃣ Récupération du conducteur
+        $conducteur = $covoiturage->getConducteur();
 
+        // 5️⃣ Récupération du nombre d'avis et de la note moyenne via AvisRepository
+        $nbAvis = $this->avisRepo->getNbAvisByUtilisateur($conducteur->getIdUtilisateur());
+        $noteMoyenne = $this->avisRepo->getNoteMoyenneByUtilisateur($conducteur->getIdUtilisateur());
 
+        // 6️⃣ Passer les variables à la vue
         require __DIR__ . '/../../View/covoiturages/detail_covoiturage.php';
     }
+
+
 
 
     /**
