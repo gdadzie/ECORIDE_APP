@@ -1,64 +1,98 @@
 <?php
 namespace Repository;
 
-use Config\Database;
-use Entity\Avis;
 use PDO;
+use Entity\Avis;
 
 class AvisRepository
 {
-    private PDO $conn;
+    private PDO $pdo;
 
-    public function __construct()
+    public function __construct(PDO $pdo)
     {
-        $this->conn = Database::getConnection();
+        $this->pdo = $pdo;
     }
 
-    // Ajouter un avis
-    public function add(Avis $avis): bool
+    /**
+     * ➤ CREATE : Ajouter un avis (note + commentaire)
+     */
+    public function create(Avis $avis): int
     {
         $sql = "INSERT INTO avis (id_covoiturage, id_emetteur, id_receveur, note, commentaire, statut, date_avis)
-                VALUES (:id_covoiturage, :id_emetteur, :id_receveur, :note, :commentaire, :statut, :date_avis)";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            ':id_covoiturage' => $avis->getIdCovoiturage(),
-            ':id_emetteur'    => $avis->getIdEmetteur(),
-            ':id_receveur'    => $avis->getIdReceveur(),
-            ':note'           => $avis->getNote(),
-            ':commentaire'    => $avis->getCommentaire(),
-            ':statut'         => $avis->getStatut(),
-            ':date_avis'      => $avis->getDateAvis(),
+                VALUES (:covoiturage, :emetteur, :receveur, :note, :commentaire, :statut, :date_avis)";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->execute([
+            'covoiturage' => $avis->getIdCovoiturage(),
+            'emetteur' => $avis->getIdEmetteur(),
+            'receveur' => $avis->getIdReceveur(),
+            'note' => $avis->getNote(),
+            'commentaire' => $avis->getCommentaire(),
+            'statut' => $avis->getStatut(),
+            'date_avis' => $avis->getDateAvis()
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
+    }
+
+    /**
+     * ➤ UPDATE : modifier un avis existant
+     */
+    public function update(Avis $avis): void
+    {
+        $sql = "UPDATE avis 
+                SET note = :note, commentaire = :commentaire, statut = :statut
+                WHERE id_avis = :id";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'note' => $avis->getNote(),
+            'commentaire' => $avis->getCommentaire(),
+            'statut' => $avis->getStatut(),
+            'id' => $avis->getIdAvis()
         ]);
     }
 
-    // Récupérer les avis reçus par un utilisateur
-    public function getAvisByReceveur(int $id_receveur): array
+    /**
+     * ➤ READ : Avis d’un covoiturage
+     */
+    public function getByCovoiturage(int $id): array
     {
-        $sql = "SELECT * FROM avis WHERE id_receveur = :id ORDER BY date_avis DESC";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':id', $id_receveur, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->prepare("SELECT * FROM avis WHERE id_covoiturage = :id ORDER BY date_avis DESC");
+        $stmt->execute(['id' => $id]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $avisList = [];
+
+        foreach ($rows as $r) {
+            $avis = new Avis(
+                $r['id_covoiturage'],
+                $r['id_emetteur'],
+                $r['id_receveur'],
+                $r['note'],
+                $r['commentaire'],
+                $r['statut'],
+                $r['date_avis']
+            );
+            $avis->setIdAvis($r['id_avis']);
+
+            $avisList[] = $avis;
+        }
+
+        return $avisList;
     }
 
-    // Récupérer les avis émis par un utilisateur
-    public function getAvisByEmetteur(int $id_emetteur): array
+    /**
+     * ➤ READ : note moyenne d’un conducteur
+     */
+    public function getMoyenneUtilisateur(int $idUtilisateur): ?float
     {
-        $sql = "SELECT * FROM avis WHERE id_emetteur = :id ORDER BY date_avis DESC";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':id', $id_emetteur, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+        $stmt = $this->pdo->prepare("SELECT AVG(note) AS moyenne FROM avis WHERE id_receveur = :id");
+        $stmt->execute(['id' => $idUtilisateur]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Récupérer la note moyenne
-    public function getMoyenneNotesUtilisateur(int $id_utilisateur): ?float
-    {
-        $sql = "SELECT AVG(note) as moyenne FROM avis WHERE id_receveur = :id AND statut = 'validé'";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':id', $id_utilisateur, PDO::PARAM_INT);
-        $stmt->execute();
-        $res = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $res && $res['moyenne'] !== null ? round((float)$res['moyenne'], 1) : null;
+        return $row['moyenne'] !== null ? (float)$row['moyenne'] : null;
     }
 }

@@ -109,4 +109,10 @@ class VillesRepository
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? $row['nom_ville'] : null;
     }
+
+    public function getAllVillesOrdered(): array
+    {
+        $stmt = $this->conn->query("SELECT id_ville, nom_ville FROM villes ORDER BY nom_ville ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
