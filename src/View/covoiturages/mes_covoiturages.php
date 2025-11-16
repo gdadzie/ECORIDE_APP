@@ -1,6 +1,8 @@
 <?php
-// $user doit être défini depuis le contrôleur
-$user = '';
+// $user et $covoiturages doivent être définis depuis le contrôleur
+$user = $user ?? null;
+$covoiturages = $covoiturages ?? [];
+
 $photoPathWeb = ($user && method_exists($user, 'getPhoto') && $user->getPhoto())
         ? $user->getPhoto()
         : '/uploads/photos/default-avatar.jpg';
@@ -8,8 +10,6 @@ $userPseudo = ($user && method_exists($user, 'getPseudo'))
         ? $user->getPseudo()
         : 'Utilisateur';
 ?>
-
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -95,104 +95,23 @@ $userPseudo = ($user && method_exists($user, 'getPseudo'))
             flex-wrap: wrap;
         }
 
-        /* Boutons raffinés et professionnels */
-        .btn-eco {
-            background-color: #4caf50;
-            color: #fff;
-            border-radius: 6px;
-            border: none;
-            padding: 8px 14px;
-            font-size: 0.9rem;
-            text-decoration: none;
-            text-align: center;
-            transition: background-color 0.2s, transform 0.2s;
-        }
+        .btn-eco { background-color: #4caf50; color: #fff; border-radius: 6px; border: none; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; transition: background-color 0.2s, transform 0.2s; }
         .btn-eco:hover { background-color: #388e3c; transform: translateY(-1px); }
 
-        .btn-modifier {
-            background-color: #ffb74d;
-            color: #212529;
-            border-radius: 6px;
-            padding: 8px 14px;
-            font-size: 0.9rem;
-            text-decoration: none;
-            text-align: center;
-            border: none;
-            transition: background-color 0.2s, transform 0.2s;
-        }
+        .btn-modifier { background-color: #ffb74d; color: #212529; border-radius: 6px; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; border: none; transition: background-color 0.2s, transform 0.2s; }
         .btn-modifier:hover { background-color: #fb8c00; transform: translateY(-1px); }
 
-        .btn-supprimer {
-            background-color: #e57373;
-            color: #fff;
-            border-radius: 6px;
-            padding: 8px 14px;
-            font-size: 0.9rem;
-            text-decoration: none;
-            text-align: center;
-            border: none;
-            transition: background-color 0.2s, transform 0.2s;
-        }
+        .btn-supprimer { background-color: #e57373; color: #fff; border-radius: 6px; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; border: none; transition: background-color 0.2s, transform 0.2s; }
         .btn-supprimer:hover { background-color: #d32f2f; transform: translateY(-1px); }
 
-        .btn-eco, .btn-modifier, .btn-supprimer {
-            display: inline-block;
-            cursor: pointer;
-            line-height: 1.5;
-        }
+        .btn-eco, .btn-modifier, .btn-supprimer { display: inline-block; cursor: pointer; line-height: 1.5; }
+        .btn-eco:focus, .btn-modifier:focus, .btn-supprimer:focus { outline: none; box-shadow: 0 0 0 3px rgba(76,175,80,0.4); }
 
-        .btn-eco:focus, .btn-modifier:focus, .btn-supprimer:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(76,175,80,0.4);
-        }
-
-        /* RESPONSIVE */
-        .row-cards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .col-card {
-            flex: 1 1 100%; /* mobile par défaut */
-        }
-
-        @media (min-width: 576px) {
-            .col-card { flex: 1 1 calc(50% - 20px); } /* tablette */
-        }
-
-        @media (min-width: 992px) {
-            .col-card { flex: 1 1 calc(33.333% - 20px); } /* desktop */
-        }
-
-        @media (min-width: 1400px) {
-            .col-card { flex: 1 1 calc(25% - 20px); } /* très grand écran */
-        }
-
-        /* Par défaut mobile: 1 carte par ligne */
+        .row-cards { display: flex; flex-wrap: wrap; gap: 20px; }
         .col-card { flex: 1 1 100%; }
-
-        /* Petit téléphone >= 375px : 2 cartes par ligne */
-        @media (min-width: 375px) {
-            .col-card { flex: 1 1 calc(50% - 20px); }
-        }
-
-        /* Tablette >= 576px : 2 cartes par ligne */
-        @media (min-width: 576px) {
-            .col-card { flex: 1 1 calc(50% - 20px); }
-        }
-
-        /* Desktop >= 992px : 3 cartes par ligne */
-        @media (min-width: 992px) {
-            .col-card { flex: 1 1 calc(33.333% - 20px); }
-        }
-
-        /* Très grand écran >= 1400px : 4 cartes par ligne */
-        @media (min-width: 1400px) {
-            .col-card { flex: 1 1 calc(25% - 20px); }
-        }
-
-
+        @media (min-width: 576px) { .col-card { flex: 1 1 calc(50% - 20px); } }
+        @media (min-width: 992px) { .col-card { flex: 1 1 calc(33.333% - 20px); } }
+        @media (min-width: 1400px) { .col-card { flex: 1 1 calc(25% - 20px); } }
     </style>
 </head>
 <body>
@@ -200,6 +119,7 @@ $userPseudo = ($user && method_exists($user, 'getPseudo'))
 <?php include __DIR__ . '/../partials/header.php'; ?>
 
 <div class="container dashboard-container">
+
     <div class="dashboard-header">
         <img src="<?= htmlspecialchars($photoPathWeb) ?>" alt="Photo de profil" class="user-photo">
         <h2>Mes covoiturages</h2>
@@ -211,17 +131,19 @@ $userPseudo = ($user && method_exists($user, 'getPseudo'))
                 <div class="col-card d-flex">
                     <div class="card card-covoiturage flex-fill d-flex flex-column">
                         <div class="card-body d-flex flex-column">
-                            <h5><?= htmlspecialchars($c['ville_depart_nom'] ?? 'Départ') ?> → <?= htmlspecialchars($c['ville_arrivee_nom'] ?? 'Arrivée') ?></h5>
-                            <p><strong>Date :</strong> <?= htmlspecialchars($c['date_depart'] ?? '—') ?> à <?= htmlspecialchars($c['heure_depart'] ?? '—') ?></p>
-                            <p><strong>Places :</strong> <?= htmlspecialchars($c['nb_places'] ?? 0) ?></p>
-                            <p><strong>Prix :</strong> <?= htmlspecialchars($c['prix'] ?? 0) ?> €</p>
-                            <p><strong>Durée :</strong> <?= htmlspecialchars($c['duree_minutes'] ?? 0) ?> min</p>
-                            <p><strong>Statut :</strong> <?= htmlspecialchars($c['statut'] ?? '—') ?></p>
+                            <h5><?= htmlspecialchars($c->getVilleDepartNom() ?? 'Départ') ?> → <?= htmlspecialchars($c->getVilleArriveeNom() ?? 'Arrivée') ?></h5>
+
+                            <p><strong>Date :</strong> <?= htmlspecialchars($c->getDateDepart() ?? '—') ?> à <?= htmlspecialchars($c->getHeureDepart() ?? '—') ?></p>
+                            <p><strong>Arrivée :</strong> <?= htmlspecialchars($c->getHeureArrivee() ?? '—') ?></p>
+                            <p><strong>Places :</strong> <?= htmlspecialchars($c->getNbPlaces() ?? 0) ?></p>
+                            <p><strong>Prix :</strong> <?= htmlspecialchars($c->getPrix() ?? 0) ?> €</p>
+                            <p><strong>Durée :</strong> <?= htmlspecialchars($c->getDureeMinutes() ?? 0) ?> min</p>
+                            <p><strong>Statut :</strong> <?= htmlspecialchars($c->getStatut() ?? '—') ?></p>
 
                             <div class="card-actions mt-auto">
-                                <a href="../utilisateurs/index.php?entity=covoiturages&action=detail_covoiturage&id=<?= (int)$c['id_covoiturage'] ?>" class="btn-eco">Détails</a>
-                                <a href="../utilisateurs/index.php?entity=covoiturages&action=modifier_covoiturage&id=<?= (int)$c['id_covoiturage'] ?>" class="btn-modifier">Modifier</a>
-                                <a href="../utilisateurs/index.php?entity=covoiturages&action=supprimer_covoiturage&id=<?= (int)$c['id_covoiturage'] ?>" class="btn-supprimer" onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">Supprimer</a>
+                                <a href="index.php?entity=covoiturages&action=detail_covoiturage&id=<?= (int)$c->getIdCovoiturage() ?>" class="btn-eco">Détails</a>
+                                <a href="index.php?entity=covoiturages&action=modifier_covoiturage&id=<?= (int)$c->getIdCovoiturage() ?>" class="btn-modifier">Modifier</a>
+                                <a href="index.php?entity=covoiturages&action=supprimer&id=<?= (int)$c->getIdCovoiturage() ?>" class="btn-supprimer" onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">Supprimer</a>
                             </div>
                         </div>
                     </div>
@@ -235,4 +157,4 @@ $userPseudo = ($user && method_exists($user, 'getPseudo'))
 
 <script src="/assets/js/bootstrap/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html>gi

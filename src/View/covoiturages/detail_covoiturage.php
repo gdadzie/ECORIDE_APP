@@ -2,179 +2,151 @@
 include __DIR__ . '/../layout.php';
 include __DIR__ . '/../partials/header.php';
 
-// 🔹 Guard pour éviter "Undefined variable"
+// Guard : s'assurer que $covoiturage est présent
 if (!isset($covoiturage) || empty($covoiturage)) {
     echo '<div class="alert alert-danger text-center mt-5">Covoiturage introuvable.</div>';
     return;
 }
 
-// Définir la locale en français
-setlocale(LC_TIME, 'fr_FR.utf8');
+// Définir si trajet écologique
+$ecologique = $covoiturage->isEcologique();
 
-// Créer un objet DateTime à partir de la date et heure
-$dateTime = new DateTime($covoiturage['date_depart'] . ' ' . $covoiturage['heure_depart']);
+// Construire la date en français
+$dateStr = $covoiturage->getDateDepart() . ' ' . $covoiturage->getHeureDepart();
+try {
+    $dateTime = new DateTime($dateStr);
+} catch (Exception $e) {
+    $dateTime = new DateTime();
+}
 
-// Obtenir le jour abrégé en majuscule (JEU, LUN, MER...)
-$jour = strtoupper($dateTime->format('D')); // format 'D' donne Mon, Tue...
-// Convertir les mois anglais en français si besoin
-$mois = strtoupper($dateTime->format('M')); // format 'M' donne Jan, Feb...
-$jourMois = $dateTime->format('d'); // numéro du jour
+$joursFRComplet = [
+        'Monday'=>'Lundi','Tuesday'=>'Mardi','Wednesday'=>'Mercredi','Thursday'=>'Jeudi',
+        'Friday'=>'Vendredi','Saturday'=>'Samedi','Sunday'=>'Dimanche'
+];
+$moisFRComplet = [
+        'January'=>'janvier','February'=>'février','March'=>'mars','April'=>'avril','May'=>'mai',
+        'June'=>'juin','July'=>'juillet','August'=>'août','September'=>'septembre','October'=>'octobre',
+        'November'=>'novembre','December'=>'décembre'
+];
 
-// Tableau de correspondance anglais → français pour jours et mois
-$joursFR = ['Mon'=>'LUN','Tue'=>'MAR','Wed'=>'MER','Thu'=>'JEU','Fri'=>'VEN','Sat'=>'SAM','Sun'=>'DIM'];
-$moisFR  = ['Jan'=>'JAN','Feb'=>'FÉV','Mar'=>'MAR','Apr'=>'AVR','May'=>'MAI','Jun'=>'JUN','Jul'=>'JUL','Aug'=>'AOÛ','Sep'=>'SEP','Oct'=>'OCT','Nov'=>'NOV','Dec'=>'DÉC'];
+$jourFR  = $joursFRComplet[$dateTime->format('l')] ?? $dateTime->format('l');
+$moisFR  = $moisFRComplet[$dateTime->format('F')] ?? $dateTime->format('F');
+$affichageDateLong = sprintf(
+        '%s %d %s %s - %s',
+        $jourFR,
+        (int)$dateTime->format('d'),
+        $moisFR,
+        $dateTime->format('Y'),
+        $dateTime->format('H:i')
+);
 
-$jour = $joursFR[$jour] ?? $jour;
-$mois = $moisFR[$mois] ?? $mois;
+// Récupération des valeurs
+$pseudo = $covoiturage->getConducteur()->getPseudo() ?? 'Conducteur';
+$photoConducteur = $covoiturage->getConducteur()->getPhoto() ?? 'https://i.pravatar.cc/60';
+$note = $covoiturage->getNote(); // peut être null
+$nbPlaces = $covoiturage->getNbPlaces() ?? '-';
+$modePaiement = $covoiturage->getModePaiement() ?? 'Carte / Cash';
+$prix = $covoiturage->getPrix() ?? '-';
+$villeDepart = $covoiturage->getVilleDepartNom() ?? '-';
+$villeArrivee = $covoiturage->getVilleArriveeNom() ?? '-';
+$heureDepart = $covoiturage->getHeureDepart() ?? '-';
+$duree = $covoiturage->getDureeMinutes() ?? '-';
+$distance = $covoiturage->getDistanceKm() ?? '-';
 
-$affichageDate = "$jour. $jourMois $mois";
-
+// Nombre d'avis du conducteur (à créer dans l'entité Utilisateur : getNbAvis())
+$nbAvis = $covoiturage->getConducteur()->getNbAvis() ?? 0;
 ?>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-<style>
-    body {
-        background-color: #f4fdf6;
-        font-family: 'Segoe UI', sans-serif;
-    }
-    .detail-card {
-        max-width: 500px;
-        margin: 2rem auto;
-        border-radius: 12px;
-        border: 1px solid #cce8cc;
-        background: #fff;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        overflow: hidden;
-    }
-    .detail-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background-color: #d4f1d4;
-    }
-    .header-info {
-        display: flex;
-        flex-direction: column;
-    }
-    .header-info h5 {
-        margin: 0;
-        font-weight: 600;
-        color: #1b5e20;
-    }
-    .stars {
-        font-size: 0.85rem;
-        color: #fbc02d;
-    }
-    .header-photo img {
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-    }
-    .detail-card-body {
-        padding: 1rem;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-    .trajet-line {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin: 1rem 0;
-    }
-    .trajet-line .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: #4caf50;
-        margin: 4px 0;
-    }
-    .trajet-line .dot.red { background-color: #e53935; }
-    .trajet-info {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-    }
-    .trajet-info p {
-        margin: 0;
-    }
-    .eco-tag {
-        font-size: 0.75rem;
-        font-weight: 300;
-        color: #2e7d32;
-        margin-left: 0.4rem;
-    }
-    .detail-card-footer {
-        padding: 0.75rem 1rem;
-        display: flex;
-        justify-content: space-between;
-        background-color: #e8f8e8;
-        border-top: 1px solid #cce8cc;
-    }
-    .btn-eco {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.7rem;
-        border-radius: 6px;
-    }
-    .btn-eco-yellow { background-color: #ffeb3b; color: #333; border: none; }
-    .btn-eco-yellow:hover { background-color: #fdd835; }
-</style>
+<div class="container my-5 d-flex justify-content-center">
+    <div class="card shadow-sm border-0 p-4" style="max-width:600px; width:100%;">
+        <!-- Date -->
+        <div class="text-center text-muted mb-3"><?= htmlspecialchars($affichageDateLong) ?></div>
 
-<div class="container my-5">
-    <h1 class="text-center text-success mb-4 fw-bold"><?= $affichageDate ?> - <?= htmlspecialchars($covoiturage['heure_depart'] ?? '-') ?></h1>
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <img src="<?= htmlspecialchars($photoConducteur) ?>" class="rounded-circle" width="60" height="60">
+                <div>
+                    <div class="fw-bold"><?= htmlspecialchars($pseudo) ?>
+                        <?php if ($ecologique): ?>
+                            <span class="badge bg-success-subtle text-success">Écologique</span>
+                        <?php endif; ?>
+                    </div>
 
-    <div class="detail-card">
-        <!-- Header: pseudo, étoiles à gauche / photo à droite -->
-        <div class="detail-card-header">
-            <div class="header-info">
-                <h5><?= htmlspecialchars($covoiturage['pseudo'] ?? 'Conducteur') ?>
-                    <?php if($ecologique): ?>
-                        <span class="eco-tag">Écologique</span>
-                    <?php endif; ?>
-                </h5>
-                <div class="stars">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star"></i>
-                    <i class="bi bi-star"></i>
-                    <small class="text-muted">(12 avis)</small>
+                    <!-- Notes étoiles et avis -->
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <?php
+                        $noteMax = 5;
+                        $noteArrondie = $note !== null ? floor($note) : 0;
+                        $demiEtoile = $note !== null && ($note - $noteArrondie) >= 0.5;
+                        for ($i = 1; $i <= $noteMax; $i++):
+                            if ($i <= $noteArrondie): ?>
+                                <i class="bi bi-star-fill text-warning"></i>
+                            <?php elseif ($i == $noteArrondie + 1 && $demiEtoile): ?>
+                                <i class="bi bi-star-half text-warning"></i>
+                            <?php else: ?>
+                                <i class="bi bi-star text-secondary"></i>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+
+                        <?php if ($note !== null): ?>
+                            <span class="ms-2 text-muted">(<?= htmlspecialchars($note) ?>)</span>
+                        <?php endif; ?>
+
+                        <span class="ms-2 text-muted">• <?= htmlspecialchars($nbPlaces) ?> place(s)</span>
+
+                        <!-- Lien discret vers les avis -->
+                        • <a href="index.php?entity=utilisateurs&action=avis&id=<?= $covoiturage->getConducteur()->getIdUtilisateur() ?>" class="text-decoration-underline">
+                            <?= $nbAvis ?? 0 ?> avis
+                            <?php if ($noteMoyenne !== null): ?>
+                                - <?= number_format($noteMoyenne, 1) ?>/5
+                            <?php endif; ?>
+                        </a>
+
+
+                    </div>
                 </div>
             </div>
-            <div class="header-photo">
-                <img src="<?= htmlspecialchars($covoiturage['photo_conducteur'] ?? 'https://i.pravatar.cc/60') ?>" alt="Conducteur">
+            <div class="text-end">
+                <div class="text-muted small"><?= htmlspecialchars($modePaiement) ?></div>
+                <div class="fw-semibold fs-5"><?= null !== $prix ? htmlspecialchars($prix) . ' €' : '-' ?></div>
             </div>
         </div>
 
-        <!-- Body: trajet -->
-        <div class="detail-card-body">
-            <div class="trajet-info">
-                <p><i class="bi bi-geo-alt-fill text-success"></i> <?= htmlspecialchars($covoiturage['ville_depart_nom'] ?? '-') ?></p>
-                <p><i class="bi bi-geo-alt-fill text-danger"></i> <?= htmlspecialchars($covoiturage['ville_arrivee_nom'] ?? '-') ?></p>
+        <!-- Trajet -->
+        <div class="d-flex mb-4">
+            <div class="d-flex flex-column align-items-center me-3">
+                <span class="bg-success rounded-circle" style="width:12px;height:12px;"></span>
+                <div class="flex-grow-1 bg-success-subtle my-1" style="width:2px;"></div>
+                <span class="bg-success rounded-circle" style="width:12px;height:12px;"></span>
             </div>
-            <div class="trajet-line">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot red"></div>
+            <div>
+                <div class="mb-2">
+                    <div class="fw-semibold fs-5"><?= htmlspecialchars($villeDepart) ?></div>
+                    <span class="badge bg-secondary-subtle">Départ</span>
+                </div>
+                <div class="mb-2">
+                    <div class="fw-semibold fs-5"><?= htmlspecialchars($villeArrivee) ?></div>
+                    <span class="badge bg-secondary-subtle">Arrivée</span>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <div class="badge bg-light text-dark"><?= htmlspecialchars($heureDepart) ?></div>
+                    <div class="badge bg-light text-dark"><?= htmlspecialchars($duree) ?> min</div>
+                    <div class="badge bg-light text-dark"><?= htmlspecialchars($distance) ?> km</div>
+                </div>
             </div>
-
-            <p><i class="bi bi-people"></i> Passagers disponibles : <?= htmlspecialchars($covoiturage['nb_places'] ?? '-') ?></p>
-            <p><i class="bi bi-credit-card"></i> Paiement : <?= htmlspecialchars($covoiturage['mode_paiement'] ?? '-') ?></p>
         </div>
 
-        <!-- Footer: boutons -->
-        <div class="detail-card-footer">
-            <button onclick="history.back()" class="btn btn-eco btn-eco-yellow">
-                <i class="bi bi-arrow-left"></i> Détail
-            </button>
-            <a href="#" class="btn btn-success btn-eco">
-                <i class="bi bi-check-circle"></i> Accepter
+        <!-- Footer -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="javascript:history.back()" class="text-muted d-flex align-items-center">
+                <i class="bi bi-arrow-left me-2"></i> Retour
             </a>
+            <button class="btn btn-success px-4">Accepter</button>
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
