@@ -1,0 +1,48 @@
+# -----------------------------
+# Système et fichiers temporaires
+# -----------------------------
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.bak
+*.old
+
+# -----------------------------
+# Dossier public/uploads (photos utilisateurs)
+# -----------------------------
+/public/uploads/
+
+# -----------------------------
+# Fichiers de configuration locaux
+# -----------------------------
+/vendor/
+/composer.lock
+/node_modules/
+/package-lock.json
+/package.json
+
+# -----------------------------
+# Cache et sessions PHP
+# -----------------------------
+/tmp/
+/sessions/
+*.cache
+*.sess
+
+# -----------------------------
+# IDE et éditeurs
+# -----------------------------
+.idea/
+.vscode/
+*.iml
+
+# -----------------------------
+# Autres fichiers générés
+# -----------------------------
+/public/public/
+*.zip
+*.tar.gz
+*.tar
+*.rar
