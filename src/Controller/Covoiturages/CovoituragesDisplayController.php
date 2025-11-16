@@ -1,6 +1,7 @@
 <?php
 namespace Controller\Covoiturages;
 
+use Entity\Covoiturage;
 use Repository\CovoituragesRepository;
 use Repository\UtilisateursRepository;
 
@@ -8,11 +9,27 @@ class CovoituragesDisplayController
 {
     private CovoituragesRepository $covoituragesRepo;
     private UtilisateursRepository $utilisateursRepo;
+    private ?Covoiturage $covoiturage = null;
 
     public function __construct(CovoituragesRepository $covoituragesRepo, UtilisateursRepository $utilisateursRepo)
     {
         $this->covoituragesRepo = $covoituragesRepo;
         $this->utilisateursRepo = $utilisateursRepo;
+
+    }
+
+    /**
+     * 🔍 Affichage des résultats d’une recherche
+     */
+    public function resultatsRecherche()
+    {
+        $depart = $_GET['depart'] ?? null;
+        $arrivee = $_GET['arrivee'] ?? null;
+        $date = $_GET['date'] ?? null;
+
+        $covoiturages = $this->covoituragesRepo->rechercherCovoiturages($depart, $arrivee, $date);
+
+        require __DIR__ . '/../../View/covoiturages/resultats_recherche.php';
     }
 
     /**
@@ -20,26 +37,34 @@ class CovoituragesDisplayController
      */
     public function showDetails(): void
     {
-        $id = (int) ($_GET['id'] ?? 0);
-        $covoiturage = $id > 0 ? $this->covoituragesRepo->getEntityById($id) : null;
+
+        $id = intval($_GET['id'] ?? 0);
+
+        // Récupération entité
+        $covoiturage = $this->covoituragesRepo->getEntityById($id);
 
         if (!$covoiturage) {
             echo "<p class='text-center text-danger'>Covoiturage introuvable.</p>";
             return;
         }
 
-        // ⚡ Calcul automatique de l’heure d’arrivée
+        // Calcul de l'heure d'arrivée dans l'objet
         $covoiturage->calculerHeureArrivee();
+
+        // On rend l'objet disponible dans la vue
+        $this->covoiturage = $covoiturage;
+
 
         require __DIR__ . '/../../View/covoiturages/detail_covoiturage.php';
     }
+
 
     /**
      * Récupère tous les covoiturages d'un utilisateur sous forme d'objets
      */
     public function getCovoituragesByUtilisateur(int $userId): array
     {
-        $liste = $this->covoituragesRepo->getEntitiesByUtilisateur($userId);
+        $liste = $this->covoituragesRepo->getCovoituragesByUtilisateur($userId);
 
         // ⚡ Calcul automatique pour chaque objet
         foreach ($liste as $c) {
@@ -86,7 +111,7 @@ class CovoituragesDisplayController
             exit;
         }
 
-        $covoiturages = $this->covoituragesRepo->getEntitiesByUtilisateur($userId);
+        $covoiturages = $this->covoituragesRepo->getCovoituragesByUtilisateur($userId);
 
         // ⚡ Toujours calculer l’heure d’arrivée
         foreach ($covoiturages as $c) {
@@ -132,7 +157,7 @@ class CovoituragesDisplayController
         $villeArrivee = $_GET['ville_arrivee'] ?? '';
         $dateDepart = $_GET['date_depart'] ?? null;
 
-        $covoiturages = $this->covoituragesRepo->rechercherCovoituragesSouples($villeDepart, $villeArrivee, $dateDepart);
+        $covoiturages = $this->covoituragesRepo->rechercherCovoiturages($villeDepart, $villeArrivee, $dateDepart);
 
         require __DIR__ . '/../../View/covoiturages/liste_covoiturages.php';
     }
@@ -144,5 +169,13 @@ class CovoituragesDisplayController
         $depart->modify("+{$dureeMinutes} minutes");
         return $depart->format("H:i:s");
     }
+
+    private function calculerHeureArriveePourListe(array $covoits): void
+    {
+        foreach ($covoits as $c) {
+            $c->calculerHeureArrivee();
+        }
+    }
+
 
 }
