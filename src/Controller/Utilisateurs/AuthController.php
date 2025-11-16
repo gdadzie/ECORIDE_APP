@@ -19,12 +19,14 @@ class AuthController
         $success = false;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
             $pseudo = trim($_POST['pseudo'] ?? '');
-            $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-            $mdp = $_POST['mdp'] ?? '';
+            $email  = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
+            $mdp    = $_POST['mdp'] ?? '';
 
             try {
-                // 1️⃣ Validation des champs
+
+                // 🔍 Validation
                 if (empty($pseudo) || empty($email) || empty($mdp)) {
                     throw new \Exception("Tous les champs sont obligatoires.");
                 }
@@ -41,18 +43,29 @@ class AuthController
                     throw new \Exception("Le mot de passe doit contenir au moins 6 caractères.");
                 }
 
-                // 2️⃣ Hash du mot de passe
-                $mdpHash = password_hash($mdp, PASSWORD_DEFAULT);
+                // 🆕 IMPORTANT : on envoie le mot de passe brut
+                $user = new Utilisateur(
+                    nom: '',
+                    prenom: '',
+                    pseudo: $pseudo,
+                    email: $email,
+                    telephone: '',
+                    mdp: $mdp,
+                    role: 'user',
+                    type_utilisateur: 'passager',
+                    actif: 1,
+                    photo: '/uploads/photos/default-avatar.jpg',
+                    date_creation: date('Y-m-d H:i:s')
+                );
 
-                // 3️⃣ Création de l'utilisateur
-                $user = new Utilisateur('', '', $pseudo, $email, $mdpHash);
+                // 👇 Le hash sera fait dans le repository
                 $this->repo->create($user);
 
-                // 4️⃣ Initialisation des 20 crédits
+                // Crédit d'accueil : 20€
                 $this->repo->InitialiserCredit($user->getIdUtilisateur());
 
-                $message = "Utilisateur créé avec succès (ID : {$user->getIdUtilisateur()}) avec 20 crédits";
                 $success = true;
+                $message = "Compte créé avec succès !";
 
             } catch (\Exception $e) {
                 $message = "Erreur : " . $e->getMessage();
@@ -61,9 +74,6 @@ class AuthController
 
         include __DIR__ . '/../../View/utilisateurs/creer_compte_utilisateur.php';
     }
-
-
-
     public function login(): void
     {
         if (session_status() === PHP_SESSION_NONE) {

@@ -14,13 +14,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../Config/Database.php';
 
 use Config\Database;
+use Controller\Covoiturages\CovoituragesController;
 use PDO;
 use PDOException;
-use Repository\UtilisateursRepository;
 use Repository\CovoituragesRepository;
-use Controller\UtilisateursController;
-use Controller\AccueilController;
-use Entity\Covoiturage;
+use Repository\UtilisateursRepository;
+use src\Controller\Accueil\AccueilController;
+use src\Controller\Utilisateurs\UtilisateursController;
 
 
 // Connexion PDO

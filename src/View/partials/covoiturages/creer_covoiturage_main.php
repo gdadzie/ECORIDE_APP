@@ -2,10 +2,8 @@
 include __DIR__ . '/../../layout.php';
 include __DIR__ . '/../../partials/header.php';
 
-// 🔹 Guard pour éviter "Undefined variable"
-if (!isset($villes)) {
-    $villes = [];
-}
+if (!isset($villes)) $villes = [];
+if (!isset($vehicules)) $vehicules = [];
 ?>
 
 <style>
@@ -23,13 +21,15 @@ if (!isset($villes)) {
     <div class="form-container">
         <h2 class="form-title">Créer un nouveau covoiturage</h2>
 
-        <?php if (!empty($error)): ?>
-            <p class="message error"><?= htmlspecialchars($error) ?></p>
+        <?php if (!empty($errors)): ?>
+            <?php foreach ($errors as $error): ?>
+                <p class="message error"><?= htmlspecialchars($error) ?></p>
+            <?php endforeach; ?>
         <?php elseif (!empty($successMsg)): ?>
             <p class="message success"><?= htmlspecialchars($successMsg) ?></p>
         <?php endif; ?>
 
-        <form method="POST" action="">
+        <form method="POST" action="" id="covoiturage-form">
             <div class="row g-3">
                 <!-- Villes -->
                 <div class="col-md-6">
@@ -41,7 +41,6 @@ if (!isset($villes)) {
                         <?php endforeach; ?>
                     </select>
                 </div>
-
                 <div class="col-md-6">
                     <label class="form-label">Ville d'arrivée</label>
                     <select name="ville_arrivee" id="ville_arrivee" class="form-select" required>
@@ -55,29 +54,35 @@ if (!isset($villes)) {
                 <!-- Date / heure / durée -->
                 <div class="col-md-4">
                     <label class="form-label">Date de départ</label>
-                    <input type="date" name="date_depart" class="form-control" required>
+                    <input type="date" name="date_depart" id="date_depart" class="form-control" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Heure de départ</label>
-                    <input type="time" name="heure_depart" class="form-control" required>
+                    <input type="time" name="heure_depart" id="heure_depart" class="form-control" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Durée estimée (minutes)</label>
-                    <input type="number" name="duree_minutes" class="form-control" min="0" placeholder="Ex : 90">
+                    <input type="number" name="duree_minutes" id="duree_minutes" class="form-control" min="1" placeholder="Ex : 90" required>
+                </div>
+
+                <!-- Prévisualisation heure d'arrivée -->
+                <div class="col-md-4">
+                    <label class="form-label">Heure d'arrivée prévue</label>
+                    <input type="text" id="heure_arrivee_preview" class="form-control" placeholder="Calcul automatique" readonly>
                 </div>
 
                 <!-- Distance / prix / places -->
                 <div class="col-md-4">
                     <label class="form-label">Distance estimée (km)</label>
-                    <input type="number" name="distance_km" step="0.1" class="form-control" placeholder="Ex : 250">
+                    <input type="number" name="distance_km" step="0.1" class="form-control" min="0" placeholder="Ex : 250" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Prix (€)</label>
-                    <input type="number" name="prix" step="0.1" class="form-control" placeholder="Ex : 25.00">
+                    <input type="number" name="prix" step="0.1" class="form-control" min="0" placeholder="Ex : 25.00" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Nombre de places</label>
-                    <input type="number" name="nb_places" class="form-control" min="1" value="1">
+                    <input type="number" name="nb_places" class="form-control" min="1" value="1" required>
                 </div>
 
                 <!-- Sélection du véhicule -->
@@ -88,7 +93,7 @@ if (!isset($villes)) {
                         <?php if (!empty($vehicules)): ?>
                             <?php foreach ($vehicules as $v): ?>
                                 <option value="<?= (int) $v->getIdVehicule() ?>">
-                                    <?= htmlspecialchars($v->getNomMarque()  . $v->getModele() . ' (' . $v->getImmatriculation() . ')') ?>
+                                    <?= htmlspecialchars($v->getNomMarque() . ' ' . $v->getModele() . ' (' . $v->getImmatriculation() . ')') ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -112,7 +117,7 @@ if (!isset($villes)) {
                 <button type="submit" class="btn btn-submit">
                     <i class="bi bi-plus-circle"></i> Créer le covoiturage
                 </button>
-                <a href="index.php?entity=covoiturages&action=liste_covoiturages" class="btn btn-secondary ms-2">
+                <a href="index.php?entity=covoiturages&action=mes_covoiturages" class="btn btn-secondary ms-2">
                     <i class="bi bi-arrow-left"></i> Retour
                 </a>
             </div>
@@ -120,4 +125,28 @@ if (!isset($villes)) {
     </div>
 </div>
 
+<script>
+    const heureInput = document.getElementById('heure_depart');
+    const dureeInput = document.getElementById('duree_minutes');
+    const preview = document.getElementById('heure_arrivee_preview');
 
+    function calcHeureArrivee() {
+        const heure = heureInput.value;
+        const duree = parseInt(dureeInput.value, 10);
+        if (!heure || isNaN(duree)) {
+            preview.value = '';
+            return;
+        }
+
+        const [hh, mm] = heure.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hh);
+        date.setMinutes(mm + duree);
+        const hhArrivee = String(date.getHours()).padStart(2, '0');
+        const mmArrivee = String(date.getMinutes()).padStart(2, '0');
+        preview.value = `${hhArrivee}:${mmArrivee}`;
+    }
+
+    heureInput.addEventListener('input', calcHeureArrivee);
+    dureeInput.addEventListener('input', calcHeureArrivee);
+</script>

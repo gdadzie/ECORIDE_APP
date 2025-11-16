@@ -8,9 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $isConnected = isset($_SESSION['user']) && $_SESSION['user'] instanceof \Entity\Utilisateur;
 $userPseudo = $isConnected ? $_SESSION['user']->getPseudo() : '';
 ?>
-<head>
-    <link rel="stylesheet" href="assets/css/menu/menu.css">
-</head>
+
 
 <header class="mb-5">
     <nav class="navbar navbar-expand-lg navbar-theme-green fixed-top px-4 py-3">

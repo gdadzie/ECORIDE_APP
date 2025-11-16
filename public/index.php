@@ -1,122 +1,236 @@
 <?php
-
-
+/**
+ * =======================================
+ *  CONFIGURATION GÉNÉRALE
+ * =======================================
+ */
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+define('BASE_URL', '/Ecoride_app/public/');
+
+/**
+ * =======================================
+ *  AUTOLOAD & ENTITÉS
+ * =======================================
+ */
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../Config/Database.php';
-require_once __DIR__ . '/../src/Entity/Utilisateur.php';
-require_once __DIR__ . '/../src/Entity/Covoiturage.php';
-require_once __DIR__ . '/../src/Entity/Ville.php';
 
+// Entities
+foreach (['Utilisateur', 'Covoiturage', 'Ville', 'Vehicule', 'Avis'] as $entity) {
+    require_once __DIR__ . "/../src/Entity/$entity.php";
+}
+
+/**
+ * =======================================
+ *  SESSION
+ * =======================================
+ */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-//PDO
+$user = $_SESSION['user'] ?? null;
+
+if ($user instanceof \Entity\Utilisateur && method_exists($user, 'setTypeUtilisateur')) {
+    if (!$user->getTypeUtilisateur()) {
+        $user->setTypeUtilisateur('passager');
+        $_SESSION['user'] = $user;
+    }
+}
+
+/**
+ * =======================================
+ *  IMPORT DES NAMESPACES
+ * =======================================
+ */
 use Config\Database;
 
-//REPOSITORY
-use Repository\UtilisateursRepository;
-use Repository\CovoituragesRepository;
-use Repository\VehiculesRepository;
-use Repository\VillesRepository;
+use Repository\{
+    AvisRepository,
+    CovoituragesRepository,
+    UtilisateursRepository,
+    VehiculesRepository,
+    VillesRepository
+};
 
-//CONTROLLER
-use Controller\UtilisateursController;
-use Controller\CovoituragesController;
-use Controller\AccueilController;
-use Controller\VehiculesController;
-use Controller\VillesController;
+use Controller\Accueil\AccueilController;
+use Controller\Avis\AvisController;
+use Controller\Covoiturages\{
+    CovoituragesController,
+    CovoituragesRechercheController,
+    CovoituragesReservationController,
+    CovoituragesDisplayController
+};
+use Controller\Dashboard\DashboardController;
+use Controller\Utilisateurs\{
+    AuthController,
+    AvatarController,
+    ProfilController,
+    ProfilRoleController,
+    UtilisateurAdminController
+};
+use Controller\Vehicules\VehiculesController;
+use Controller\Villes\VillesController;
 
-// =======================================
-// Connexion à la base
-// =======================================
+/**
+ * =======================================
+ *  CONNEXION DB
+ * =======================================
+ */
 $conn = Database::getConnection();
 if (!$conn) {
     $error = Database::getLastError();
-    include __DIR__ . '/../View/erreur_connexion.php';
+    require_once __DIR__ . '/../src/View/erreur/erreur_connexion.php';
     exit;
 }
 
-// =======================================
-// Instanciation des repositories
-// =======================================
+/**
+ * =======================================
+ *  REPOSITORIES
+ * =======================================
+ */
 $utilisateursRepo = new UtilisateursRepository($conn);
 $covoituragesRepo = new CovoituragesRepository($conn);
-$vehiculesRepo     = new VehiculesRepository($conn);
-$villesRepo       = new VillesRepository($conn);
+$vehiculesRepo    = new VehiculesRepository($conn);
+$villesRepo       = new VillesRepository();
+$avisRepo         = new AvisRepository($conn);
 
-// =======================================
-// Instanciation des controllers
-// =======================================
-$utilisateursController  = new UtilisateursController($utilisateursRepo, $vehiculesRepo);
+/**
+ * =======================================
+ *  CONTRÔLEURS
+ * =======================================
+ */
+// Utilisateurs
+$authController             = new AuthController($utilisateursRepo);
+$dashboardController        = new DashboardController($utilisateursRepo);
+$profileController          = new ProfilController($utilisateursRepo);
+$avatarController           = new AvatarController($utilisateursRepo);
+$utilisateurAdminController = new UtilisateurAdminController($utilisateursRepo);
+$profileRoleController      = new ProfilRoleController();
 
-$covoituragesController = new CovoituragesController(
-    $covoituragesRepo,
-    $utilisateursRepo,
-    $vehiculesRepo,
-    $villesRepo
-);
+// Covoiturages
+$covoituragesController          = new CovoituragesController($covoituragesRepo, $utilisateursRepo, $vehiculesRepo, $villesRepo);
+$covoituragesRechercheController = new CovoituragesRechercheController($covoituragesRepo, $villesRepo);
+$covoituragesReservationController = new CovoituragesReservationController($covoituragesRepo, $utilisateursRepo);
+$covoituragesDisplayController = new CovoituragesDisplayController($covoituragesRepo, $utilisateursRepo, $avisRepo);
 
-$villesController = new VillesController();
+// Autres
 $vehiculesController = new VehiculesController($vehiculesRepo);
-$accueilController = new AccueilController();
+$villesController    = new VillesController($villesRepo);
+$accueilController   = new AccueilController();
+$avisController      = new AvisController($avisRepo);
 
-// =======================================
-// Routage
-// =======================================
+/**
+ * =======================================
+ *  ROUTAGE
+ * =======================================
+ */
 $entity = $_GET['entity'] ?? 'accueil';
 $action = $_GET['action'] ?? 'index';
 
 switch ($entity) {
+
+    /**
+     * UTILISATEURS
+     */
     case 'utilisateurs':
         switch ($action) {
-            case 'creer_compte': $utilisateursController->register(); break;
-            case 'tableau_de_bord': $utilisateursController->dashboard(); break;
-            case 'se_connecter': $utilisateursController->login(); break;
-            case 'liste_utilisateurs': $utilisateursController->liste(); break;
-            case 'supprimer': $utilisateursController->supprimer(); break;
-            case 'charte_graphique': $utilisateursController->charteGraphique(); break;
-            case 'mon_profil': $utilisateursController->profilUser(); break;
+            case 'creer_compte':        $authController->register(); break;
+            case 'se_connecter':        $authController->login(); break;
+            case 'deconnexion':         $authController->logout(); break;
+
+            case 'tableau_de_bord':     $dashboardController->dashboard(); break;
+            case 'charte_graphique':    $dashboardController->charteGraphique(); break;
+
+            case 'mon_profil':          $profileController->profilUser(); break;
+            case 'mise_a_jour_profil':  $profileController->updateProfilUtilisateur(); break;
+
+            case 'mise_a_jour_avatar':  $avatarController->updateAvatar(); break;
+
+            case 'profil_passager':     $profileRoleController->profilPassager(); break;
+            case 'profil_conducteur':   $profileRoleController->profilConducteur(); break;
+
+            case 'espace_employe':      $utilisateurAdminController->espaceEmploye(); break;
+            case 'espace_admin':        $utilisateurAdminController->espaceAdmin(); break;
+            case 'liste_utilisateurs':  $utilisateurAdminController->liste(); break;
+            case 'supprimer':           $utilisateurAdminController->supprimer(); break;
+
+            default:                    $dashboardController->dashboard(); break;
         }
         break;
 
+    /**
+     * COVOITURAGES
+     */
     case 'covoiturages':
         switch ($action) {
-            case 'creer_covoiturage': $covoituragesController->createCovoiturage(); break;
-            case 'liste_covoiturages': $covoituragesController->listeCovoituragesByEcologique(1); break;
+            case 'creer_covoiturage':             $covoituragesController->createCovoiturage(); break;
+            case 'recherche_covoiturages':        $covoituragesRechercheController->rechercherCovoituragesSouples(); break;
+            case 'mes_covoiturages':              $covoituragesDisplayController->mesCovoiturages(); break;
+            case 'supprimer':                     $covoituragesDisplayController->supprimer(); break;
+            case 'auto_completion':               $covoituragesRechercheController->autocompleteVilles(); break;
+            case 'resultats_recherche':           $covoituragesRechercheController->resultatsRecherche(); break;
+            case 'detail_covoiturage':            $covoituragesDisplayController->showDetails(); break;
+            case 'liste_covoiturages_ecologique': $covoituragesDisplayController->listeCovoituragesByEcologique(1); break;
+            case 'form_recherche_covoiturages':   $covoituragesRechercheController->formRechercheCovoiturages(); break;
+            default:                              $covoituragesRechercheController->rechercheLarge(); break;
         }
         break;
 
+    /**
+     * VÉHICULES
+     */
     case 'vehicules':
-
         switch ($action) {
-            case 'ajouter_vehicule': $vehiculesController->ajouter(); break;
-            case 'supprimer_vehicule': $vehiculesController->delete(); break;
-            case 'liste_vehicules': $vehiculesController->showVehicule(); break;
+            case 'ajouter_vehicule':            $vehiculesController->ajouter(); break;
+            case 'supprimer_vehicule':          $vehiculesController->delete(); break;
+            case 'liste_vehicules':             $vehiculesController->showVehicule(); break;
             case 'supprimer_vehicule_multiple': $vehiculesController->deleteMultiple(); break;
-
+            default:                            $vehiculesController->showVehicule(); break;
         }
         break;
 
-    case 'accueil':
-    default:
-        switch ($action) {
-            case 'index': $accueilController->index(); break;
-            case 'covoiturages': $accueilController->covoiturage(); break;
-            case 'contact': $accueilController->contact(); break;
-            case 'connexion': $accueilController->pageConnexion(); break;
-            case 'creer_compte': $accueilController->register(); break;
-            case 'logout': $accueilController->logout(); break;
-            case 'mentions_legales': $accueilController->mentionsLegales(); break;
-        }
-        break;
-
+    /**
+     * VILLES
+     */
     case 'villes':
         switch ($action) {
             case 'liste_des_villes': $villesController->show(); break;
+            default:                 $villesController->show(); break;
         }
+        break;
+
+    /**
+     * AVIS
+     */
+    case 'avis':
+        switch ($action) {
+            case 'avis': $avisController->showAvis(); break;
+            case 'ajouter': $avisController->ajouter(); break;
+            case 'modifier': $avisController->modifier(); break;
+            case 'note_moyenne': return $avisController->noteMoyenne($_SESSION['user_id']);
+            default:     $avisController->showAvis(); break;
+        }
+        break;
+
+    /**
+     * ACCUEIL
+     */
+    case 'accueil':
+    default:
+        switch ($action) {
+            case 'index':            $accueilController->index(); break;
+            case 'covoiturages':     $accueilController->covoiturage(); break;
+            case 'contact':          $accueilController->contact(); break;
+            case 'connexion':        $accueilController->pageConnexion(); break;
+            case 'creer_compte':     $accueilController->register(); break;
+            case 'logout':           $accueilController->logout(); break;
+            case 'mentions_legales': $accueilController->mentionsLegales(); break;
+            case 'dashboard':        $accueilController->grace(); break;
+            default:                 $accueilController->index(); break;
+        }
+        break;
 }
