@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../Config/Database.php';
 
 class Utilisateur
 {
-    private ?int $id_utilisateur = null; // Null par défaut
+    private ?int $id_utilisateur = null;
     private ?string $nom = null;
     private ?string $prenom = null;
     private string $pseudo = '';
@@ -15,26 +15,25 @@ class Utilisateur
     private ?string $telephone = null;
     private string $mdp = '';
     private ?string $role = 'user';
-    private ?string $type_utilisateur = 'passager'; // Par défaut "passager"
+    private ?string $type_utilisateur = 'passager';
     private ?int $actif = 1;
     private ?string $photo = null;
     private ?string $date_creation = null;
+    private ?float $note = null;
+    private ?float $nb_avis = null;
 
-    /**
-     * Constructeur flexible
-     */
     public function __construct(
-        string $nom = '',
-        string $prenom = '',
+        ?string $nom = null,
+        ?string $prenom = null,
         string $pseudo = '',
         string $email = '',
-        string $telephone = '',
+        ?string $telephone = null,
         string $mdp = '',
-        string $role = 'user',
-        string $type_utilisateur = 'passager',
-        int $actif = 1,
-        string $photo = '',
-        string $date_creation = ''
+        ?string $role = 'user',
+        ?string $type_utilisateur = 'passager',
+        ?int $actif = 1,
+        ?string $photo = null,
+        ?string $date_creation = null
     ) {
         $this->nom = $nom;
         $this->prenom = $prenom;
@@ -64,6 +63,8 @@ class Utilisateur
     public function getActif(): ?int { return $this->actif; }
     public function getPhoto(): ?string { return $this->photo; }
     public function getDateCreation(): ?string { return $this->date_creation; }
+    public function getNote(): ?float { return $this->note; }
+    public function getNbAvis(): ?float { return $this->nb_avis; }
 
     // -----------------------
     // Setters
@@ -80,25 +81,6 @@ class Utilisateur
     public function setActif(?int $actif): void { $this->actif = $actif; }
     public function setPhoto(?string $photo): void { $this->photo = $photo; }
     public function setDateCreation(?string $date_creation): void { $this->date_creation = $date_creation; }
-
-    /**
-     * Validation des champs
-     */
-    public function validate(): void
-    {
-        $this->email = trim($this->email);
-        $this->email = filter_var($this->email, FILTER_SANITIZE_EMAIL);
-
-        if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException("Email invalide.");
-        }
-
-        if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $this->pseudo)) {
-            throw new \InvalidArgumentException("Le pseudo doit contenir entre 3 et 20 caractères alphanumériques.");
-        }
-
-        if (empty($this->mdp) || strlen($this->mdp) < 6) {
-            throw new \InvalidArgumentException("Le mot de passe doit contenir au moins 6 caractères.");
-        }
-    }
+    public function setNote(?float $note): void { $this->note = $note; }
+    public function setNbAvis(?float $nb_avis): void { $this->nb_avis = $nb_avis; }
 }
