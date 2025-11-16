@@ -62,21 +62,10 @@
 
 /* Corps de page / container */
 body {
-    font-family: "Stack Sans Notch", sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f5f8f5;
     color: #2e2e2e;
 }
-.stack-sans-notch {
-    font-family: "Stack Sans Notch", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 700;
-    font-style: normal;
-}
-.stack-sans-text { font-family: "Stack Sans Text", sans-serif;font-optical-sizing: auto;font-weight: 600;font-style: normal;}
-.font-test { font-family: "Stack Sans Notch", sans-serif; }
-.colorStyle{ color: #4ca44f}
-
-
 
 /* Formulaire recherche */
 .formulaire-recherche {
@@ -86,7 +75,7 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 30px;
-    top: 400px;
+    top: 100px;
 
 
 }

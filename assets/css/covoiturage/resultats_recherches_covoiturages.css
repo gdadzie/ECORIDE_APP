@@ -1,0 +1,31 @@
+.card {
+    padding: 1.5rem; /* more internal space */
+    margin-bottom: 1.5rem; /* space between cards */
+    border-radius: 16px; /* already there, keep it */
+
+}
+
+.card-body > * {
+    margin-bottom: 0.5rem; /* space between elements inside the card */
+}
+
+.driver-info {
+    gap: 2rem; /* more space between avatar and driver info */
+}
+
+.trip-info p {
+    margin-bottom: 0.75rem; /* spacing between lines */
+    line-height: 1.5; /* makes text easier to read */
+}
+
+.d-flex.gap-2 > .badge {
+    margin-right: 1rem; /* spacing between badges */
+}
+
+.eco-card-footer {
+    background-color: #f5fbf5;
+    border-top: 1px solid #cce8cc;
+    padding: 0.5rem 0.8rem;
+    display: flex;
+    justify-content: space-between;
+}
