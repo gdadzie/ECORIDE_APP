@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../Config/Database.php';
 
 class Utilisateur
 {
-    private ?int $id_utilisateur = null;
+    private ?int $id_utilisateur = null; // Null par défaut
     private ?string $nom = null;
     private ?string $prenom = null;
     private string $pseudo = '';
@@ -15,25 +15,28 @@ class Utilisateur
     private ?string $telephone = null;
     private string $mdp = '';
     private ?string $role = 'user';
-    private ?string $type_utilisateur = 'passager';
+    private ?string $type_utilisateur = 'passager'; // Par défaut "passager"
     private ?int $actif = 1;
     private ?string $photo = null;
     private ?string $date_creation = null;
     private ?float $note = null;
     private ?float $nb_avis = null;
 
+    /**
+     * Constructeur flexible
+     */
     public function __construct(
-        ?string $nom = null,
-        ?string $prenom = null,
+        string $nom = '',
+        string $prenom = '',
         string $pseudo = '',
         string $email = '',
-        ?string $telephone = null,
+        string $telephone = '',
         string $mdp = '',
-        ?string $role = 'user',
-        ?string $type_utilisateur = 'passager',
-        ?int $actif = 1,
-        ?string $photo = null,
-        ?string $date_creation = null
+        string $role = 'user',
+        string $type_utilisateur = 'passager',
+        int $actif = 1,
+        string $photo = '',
+        string $date_creation = ''
     ) {
         $this->nom = $nom;
         $this->prenom = $prenom;
@@ -63,7 +66,7 @@ class Utilisateur
     public function getActif(): ?int { return $this->actif; }
     public function getPhoto(): ?string { return $this->photo; }
     public function getDateCreation(): ?string { return $this->date_creation; }
-    public function getNote(): ?float { return $this->note; }
+
     public function getNbAvis(): ?float { return $this->nb_avis; }
 
     // -----------------------
@@ -81,6 +84,9 @@ class Utilisateur
     public function setActif(?int $actif): void { $this->actif = $actif; }
     public function setPhoto(?string $photo): void { $this->photo = $photo; }
     public function setDateCreation(?string $date_creation): void { $this->date_creation = $date_creation; }
+    public function getNote(): ?float { return $this->note; }
     public function setNote(?float $note): void { $this->note = $note; }
+
     public function setNbAvis(?float $nb_avis): void { $this->nb_avis = $nb_avis; }
+
 }

@@ -34,7 +34,7 @@ class UtilisateursRepository
     public function create(Utilisateur $user): void
     {
         try {
-            $user->validate();
+
 
             if ($this->findByEmailOrPseudo($user->getEmail(), $user->getPseudo())) {
                 throw new RuntimeException("L'email ou le pseudo est déjà utilisé.");
@@ -95,7 +95,7 @@ class UtilisateursRepository
     public function updateUtilisateur(Utilisateur $utilisateur): bool
     {
         try {
-            $utilisateur->validate();
+
             $photoPath = $utilisateur->getPhoto();
 
             // Gestion upload photo si présent
@@ -286,4 +286,23 @@ class UtilisateursRepository
         $user->setIdUtilisateur((int)$row['id_utilisateur']);
         return $user;
     }
+
+
+    public function InitialiserCredit(int $idUtilisateur, float $montant = 20.00): void
+    {
+        try {
+            $stmt = $this->conn->prepare("
+            INSERT INTO credits (id_utilisateur, credit) 
+            VALUES (:idUtilisateur, :credit)
+        ");
+            $stmt->execute([
+                ':idUtilisateur' => $idUtilisateur,
+                ':credit' => $montant
+            ]);
+        } catch (\PDOException $e) {
+            error_log("Erreur initialisation crédit : " . $e->getMessage());
+            throw new \Exception("Impossible d'initialiser le crédit de l'utilisateur.");
+        }
+    }
+
 }

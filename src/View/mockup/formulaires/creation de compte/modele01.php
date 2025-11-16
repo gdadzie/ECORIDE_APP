@@ -1,18 +1,14 @@
-<?php include __DIR__ . '/../layout.php'; ?>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php include __DIR__ . '/../../../layout.php'; ?>
+<?php include __DIR__ . '/../../../partials/header.php'; ?>
 <?php if (isset($success) && isset($message) && $message !== ''): ?>
-    <div class="<?= $success ? 'alert-success' : 'alert-danger' ?> alert-error-modern alert-sucess-modern">
+    <div class="mt-5<?= $success ? 'alert-success' : 'alert-danger' ?> alert-error-modern alert-sucess-modern">
         <?= htmlspecialchars($message) ?>
     </div>
 <?php endif; ?>
-<head>   <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@600&family=Stack+Sans+Text:wght@200&display=swap" rel="stylesheet">
-</head>
+
 <style>
     .alert-success-modern, .alert-error-modern {
         padding: 1rem 1.5rem;
-        margin-top: 50px;
         margin-bottom: 20px;
         border-radius: 12px;
         font-weight: 500;
@@ -135,7 +131,7 @@
 
 
 <div class="card mt-5">
-    <h2 class="mt-2 font-test">Créer un compte utilisateur</h2>
+    <h2 class="mt-2">Créer un compte utilisateur</h2>
 
     <form method="post" action="">
 
@@ -158,4 +154,4 @@
 </div>
 
 </body>
-
+<?php include __DIR__ . '/../../../partials/footer.php'; ?>

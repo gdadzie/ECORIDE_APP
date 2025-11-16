@@ -72,10 +72,15 @@ class CovoituragesRechercheController
 
     public function resultatsRecherche(): void
     {
-        $ville = $_GET['ville_depart'] ?? $_GET['ville_arrivee'] ?? '';
+        $ville       = $_GET['ville_depart'] ?? $_GET['ville_arrivee'] ?? '';
+        $dateDepart  = $_GET['date_depart'] ?? null;
+        $heureDepart = $_GET['heure_depart'] ?? null;
+
         $covoiturages = !empty($ville)
-            ? $this->repo->rechercherCovoituragesParVilleUnique($ville)
+            ? $this->repo->rechercherCovoituragesSouples($ville, $dateDepart, $heureDepart)
             : [];
+
         require __DIR__ . '/../../View/covoiturages/resultats_recherches_covoiturages.php';
     }
+
 }

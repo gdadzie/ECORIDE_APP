@@ -10,7 +10,7 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
     <meta charset="UTF-8">
     <title>Tableau de bord</title>
     <link href="/assets/css/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/header/header.css">
+    <link rel="stylesheet" href="../../../public/assets/css/menu/header.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;

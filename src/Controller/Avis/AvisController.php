@@ -1,46 +1,69 @@
 <?php
 namespace Controller\Avis;
 
-use Entity\Avis;
+use JetBrains\PhpStorm\NoReturn;
 use Repository\AvisRepository;
+use Entity\Avis;
 
 class AvisController
 {
-    private AvisRepository $repo;
+    private AvisRepository $avisRepo;
 
-    public function __construct()
+    public function __construct(AvisRepository $repo)
     {
-        $this->repo = new AvisRepository();
+        $this->avisRepo = $repo;
     }
 
-    // Ajouter un avis (ex: depuis un formulaire)
-    public function add()
+    /**
+     * ➤ Ajouter un avis
+     */
+    #[NoReturn]
+    public function ajouter(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $avis = new Avis(
-                    $_POST['id_covoiturage'] ?? null,
-                    $_POST['id_emetteur'] ?? null,
-                    $_POST['id_receveur'] ?? null,
-                    $_POST['note'] ?? null,
-                    $_POST['commentaire'] ?? null,
-                    'en attente'
-                );
-                $avis->validate();
-                $this->repo->add($avis);
-                echo "<div class='alert alert-success'>Avis ajouté avec succès !</div>";
-            } catch (\Exception $e) {
-                echo "<div class='alert alert-danger'>Erreur : " . htmlspecialchars($e->getMessage()) . "</div>";
-            }
-        }
+        $avis = new Avis(
+            $_POST['id_covoiturage'],
+            $_SESSION['user_id'], // émetteur
+            $_POST['id_receveur'], // conducteur
+            $_POST['note'] ?? null,
+            $_POST['commentaire'] ?? null
+        );
 
-        require_once __DIR__ . '/../../View/Avis/liste_avis.php';
+        $id = $this->avisRepo->create($avis);
+
+        header("Location: index.php?entity=covoiturages&action=detail_covoiturage&id=" . $_POST['id_covoiturage']);
+        exit;
     }
 
-    public function showAvis()
+    /**
+     * ➤ Modifier un avis
+     */
+    #[NoReturn]
+    public function modifier(): void
+    {
+        $avis = new Avis(0,0,0); // valeurs non utilisées
+        $avis->setIdAvis($_POST['id_avis']);
+        $avis->setNote($_POST['note']);
+        $avis->setCommentaire($_POST['commentaire']);
+
+        $this->avisRepo->update($avis);
+
+        header("Location: index.php?entity=covoiturages&action=detail_covoiturage&id=" . $_POST['id_covoiturage']);
+        exit;
+    }
+
+    /**
+     * ➤ Récupérer la note moyenne d’un conducteur
+     */
+    public function noteMoyenne(int $idUtilisateur): ?float
+    {
+        return $this->avisRepo->getMoyenneUtilisateur($idUtilisateur);
+    }
+
+    public function getNbAvisByUtilisateur(int $idUtilisateur): int
     {
 
+        return $this->avisRepo->getNbAvisByUtilisateur($idUtilisateur);
 
-        require_once __DIR__ . '/../../View/Avis/liste_avis.php';
+        require_once __DIR__ .'/../View/avis/liste_avis.php';
     }
 }

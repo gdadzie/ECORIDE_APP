@@ -33,18 +33,20 @@ class VehiculesController
     public function ajouter(): void
     {
         $idUtilisateur = $_SESSION['user_id'] ?? null;
+
         if ($idUtilisateur === null) {
             header('Location: index.php?entity=users&action=login');
             exit;
         }
 
+        // ✅ Initialisation des variables pour la vue
         $message = '';
         $success = false;
-
         $couleurs = ['Noir','Blanc','Gris','Rouge','Bleu','Vert','Jaune','Autre'];
         $energies = ['Essence','Diesel','Électrique','Hybride','GPL','Autre'];
         $marques = $this->repo->getAllMarques();
 
+        // Traitement du formulaire
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle'])) {
             $data = [
                 'id_utilisateur' => $idUtilisateur,
@@ -57,6 +59,7 @@ class VehiculesController
                 'date_premiere_immatriculation' => $_POST['date_premiere_immatriculation'] ?? ''
             ];
 
+            // Validation des champs obligatoires
             if (empty($data['id_marque']) || empty($data['modele']) || empty($data['couleur']) ||
                 empty($data['energie']) || empty($data['immatriculation']) || empty($data['date_premiere_immatriculation'])) {
                 $message = "❌ Veuillez remplir tous les champs obligatoires.";
@@ -70,7 +73,10 @@ class VehiculesController
             }
         }
 
+        // Récupération des véhicules pour l'utilisateur
         $vehicules = $this->repo->getVehiculesByUtilisateur($idUtilisateur);
+
+        // Inclusion de la vue
         require_once __DIR__ . '/../../View/vehicules/ajouter_vehicule.php';
     }
 

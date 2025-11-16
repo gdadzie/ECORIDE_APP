@@ -101,9 +101,9 @@ $nbAvis = $covoiturage->getConducteur()->getNbAvis() ?? 0;
 
                         <!-- Lien discret vers les avis -->
                         • <a href="index.php?entity=utilisateurs&action=avis&id=<?= $covoiturage->getConducteur()->getIdUtilisateur() ?>" class="text-decoration-underline">
-                            <?= $nbAvis ?? 0 ?> avis
+                            Nombre d'avis : <?= $nbAvis ?? 0 ?> avis
                             <?php if ($noteMoyenne !== null): ?>
-                                - <?= number_format($noteMoyenne, 1) ?>/5
+                                - Note moyenne : <?= number_format($noteMoyenne, 1) ?>/5
                             <?php endif; ?>
                         </a>
 

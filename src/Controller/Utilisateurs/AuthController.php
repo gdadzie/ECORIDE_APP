@@ -19,24 +19,61 @@ class AuthController
         $success = false;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
             $pseudo = trim($_POST['pseudo'] ?? '');
-            $email = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-            $mdp = $_POST['mdp'] ?? '';
+            $email  = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
+            $mdp    = $_POST['mdp'] ?? '';
 
             try {
-                $user = new Utilisateur('', '', $pseudo, $email, $mdp);
-                $user->validate();
+
+                // 🔍 Validation
+                if (empty($pseudo) || empty($email) || empty($mdp)) {
+                    throw new \Exception("Tous les champs sont obligatoires.");
+                }
+
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    throw new \Exception("Email invalide.");
+                }
+
+                if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $pseudo)) {
+                    throw new \Exception("Le pseudo doit contenir entre 3 et 20 caractères alphanumériques.");
+                }
+
+                if (strlen($mdp) < 6) {
+                    throw new \Exception("Le mot de passe doit contenir au moins 6 caractères.");
+                }
+
+                // 🆕 IMPORTANT : on envoie le mot de passe brut
+                $user = new Utilisateur(
+                    nom: '',
+                    prenom: '',
+                    pseudo: $pseudo,
+                    email: $email,
+                    telephone: '',
+                    mdp: $mdp,
+                    role: 'user',
+                    type_utilisateur: 'passager',
+                    actif: 1,
+                    photo: '/uploads/photos/default-avatar.jpg',
+                    date_creation: date('Y-m-d H:i:s')
+                );
+
+                // 👇 Le hash sera fait dans le repository
                 $this->repo->create($user);
-                $message = "Utilisateur créé avec succès (ID : {$user->getIdUtilisateur()})";
+
+                // Crédit d'accueil : 20€
+                $this->repo->InitialiserCredit($user->getIdUtilisateur());
+
                 $success = true;
+                $message = "Compte créé avec succès !";
+
             } catch (\Exception $e) {
                 $message = "Erreur : " . $e->getMessage();
             }
         }
 
-        include __DIR__ . '/../View/utilisateurs/creer_compte_utilisateur.php';
+        include __DIR__ . '/../../View/utilisateurs/creer_compte_utilisateur.php';
     }
-
     public function login(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
