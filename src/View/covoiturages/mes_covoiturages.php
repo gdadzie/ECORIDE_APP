@@ -1,160 +1,132 @@
-<?php
-// $user et $covoiturages doivent être définis depuis le contrôleur
-$user = $user ?? null;
-$covoiturages = $covoiturages ?? [];
-
-$photoPathWeb = ($user && method_exists($user, 'getPhoto') && $user->getPhoto())
-        ? $user->getPhoto()
-        : '/uploads/photos/default-avatar.jpg';
-$userPseudo = ($user && method_exists($user, 'getPseudo'))
-        ? $user->getPseudo()
-        : 'Utilisateur';
-?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mes covoiturages sur ECORIDE - Gestion et affichage de vos trajets">
+    <meta name="author" content="ECORIDE">
+
     <title>Mes Covoiturages</title>
-    <link href="/assets/css/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f8f6;
-            margin: 0;
-            padding: 0;
-        }
 
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 15px;
-        }
+    <!-- CSS Bootstrap & Icons -->
+    <link rel="stylesheet" href="/assets/css/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-        .dashboard-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 40px;
-        }
+    <!-- CSS perso -->
+    <link rel="stylesheet" href="/assets/css/covoiturage/card_covoiturage.css">
+    <link rel="stylesheet" href="/assets/css/header/dashboard_header_mes_covoiturages.css">
 
-        .dashboard-header h2 {
-            color: #198754;
-            font-weight: 700;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-
-        .user-photo {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #198754;
-            margin-bottom: 10px;
-        }
-
-        .card-covoiturage {
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            background-color: #fff;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .card-covoiturage:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        }
-
-        .card-body {
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-covoiturage h5 {
-            font-weight: 600;
-            color: #1b5e20;
-            margin-bottom: 10px;
-        }
-
-        .card-covoiturage p {
-            font-size: 0.95rem;
-            color: #555;
-            margin-bottom: 5px;
-        }
-
-        .card-actions {
-            margin-top: auto;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-eco { background-color: #4caf50; color: #fff; border-radius: 6px; border: none; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; transition: background-color 0.2s, transform 0.2s; }
-        .btn-eco:hover { background-color: #388e3c; transform: translateY(-1px); }
-
-        .btn-modifier { background-color: #ffb74d; color: #212529; border-radius: 6px; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; border: none; transition: background-color 0.2s, transform 0.2s; }
-        .btn-modifier:hover { background-color: #fb8c00; transform: translateY(-1px); }
-
-        .btn-supprimer { background-color: #e57373; color: #fff; border-radius: 6px; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; border: none; transition: background-color 0.2s, transform 0.2s; }
-        .btn-supprimer:hover { background-color: #d32f2f; transform: translateY(-1px); }
-
-        .btn-eco, .btn-modifier, .btn-supprimer { display: inline-block; cursor: pointer; line-height: 1.5; }
-        .btn-eco:focus, .btn-modifier:focus, .btn-supprimer:focus { outline: none; box-shadow: 0 0 0 3px rgba(76,175,80,0.4); }
-
-        .row-cards { display: flex; flex-wrap: wrap; gap: 20px; }
-        .col-card { flex: 1 1 100%; }
-        @media (min-width: 576px) { .col-card { flex: 1 1 calc(50% - 20px); } }
-        @media (min-width: 992px) { .col-card { flex: 1 1 calc(33.333% - 20px); } }
-        @media (min-width: 1400px) { .col-card { flex: 1 1 calc(25% - 20px); } }
-    </style>
+    <script src="/assets/js/bootstrap/bootstrap.js" defer></script>
 </head>
 <body>
 
 <?php include __DIR__ . '/../partials/header.php'; ?>
 
-<div class="container dashboard-container">
+<div class="container my-5">
 
-    <div class="dashboard-header">
-        <img src="<?= htmlspecialchars($photoPathWeb) ?>" alt="Photo de profil" class="user-photo">
-        <h2>Mes covoiturages</h2>
+    <!-- Dashboard Header -->
+    <div class="text-center mb-5">
+        <img src="<?= htmlspecialchars($photoConducteur ?? '/uploads/photos/default-avatar.jpg') ?>"
+             alt="Photo de profil" class="rounded-circle mb-3" width="100" height="100">
+        <h2 class="fw-bold">Mes covoiturages</h2>
+        <p class="text-muted">Bienvenue, <?= htmlspecialchars($userPseudo ?? 'Utilisateur') ?></p>
     </div>
 
-    <div class="row-cards">
+    <!-- Liste des covoiturages -->
+    <div class="row g-4">
         <?php if (!empty($covoiturages)): ?>
-            <?php foreach ($covoiturages as $c): ?>
-                <div class="col-card d-flex">
-                    <div class="card card-covoiturage flex-fill d-flex flex-column">
+            <?php foreach ($covoiturages as $c):
+                $conducteur = $c->getConducteur();
+                $photo = $conducteur?->getPhoto() ?? '/uploads/photos/default-avatar.jpg';
+                $pseudo = $conducteur?->getPseudo() ?? 'Conducteur';
+                $note = $c->getNote() ?? 0;
+                $ecologique = $c->isEcologique() ?? false;
+                ?>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100 border-0 rounded-3 hover-card">
                         <div class="card-body d-flex flex-column">
-                            <h5><?= htmlspecialchars($c->getVilleDepartNom() ?? 'Départ') ?> → <?= htmlspecialchars($c->getVilleArriveeNom() ?? 'Arrivée') ?></h5>
 
-                            <p><strong>Date :</strong> <?= htmlspecialchars($c->getDateDepart() ?? '—') ?> à <?= htmlspecialchars($c->getHeureDepart() ?? '—') ?></p>
-                            <p><strong>Arrivée :</strong> <?= htmlspecialchars($c->getHeureArrivee() ?? '—') ?></p>
-                            <p><strong>Places :</strong> <?= htmlspecialchars($c->getNbPlaces() ?? 0) ?></p>
-                            <p><strong>Prix :</strong> <?= htmlspecialchars($c->getPrix() ?? 0) ?> €</p>
-                            <p><strong>Durée :</strong> <?= htmlspecialchars($c->getDureeMinutes() ?? 0) ?> min</p>
-                            <p><strong>Statut :</strong> <?= htmlspecialchars($c->getStatut() ?? '—') ?></p>
-
-                            <div class="card-actions mt-auto">
-                                <a href="index.php?entity=covoiturages&action=detail_covoiturage&id=<?= (int)$c->getIdCovoiturage() ?>" class="btn-eco">Détails</a>
-                                <a href="index.php?entity=covoiturages&action=modifier_covoiturage&id=<?= (int)$c->getIdCovoiturage() ?>" class="btn-modifier">Modifier</a>
-                                <a href="index.php?entity=covoiturages&action=supprimer&id=<?= (int)$c->getIdCovoiturage() ?>" class="btn-supprimer" onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">Supprimer</a>
+                            <!-- Conducteur & Note -->
+                            <div class="d-flex align-items-center mb-3 gap-3">
+                                <div>
+                                    <h6 class="mb-1"><?= htmlspecialchars($pseudo) ?>
+                                        <?php if ($ecologique): ?>
+                                            <span class="badge bg-success-subtle text-success">Éco</span>
+                                        <?php endif; ?>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <?php if ($note > 0): ?>
+                                            <?php for ($i=1; $i<=5; $i++): ?>
+                                                <i class="bi <?= $i <= floor($note) ? 'bi-star-fill text-warning' : 'bi-star text-muted' ?>"></i>
+                                            <?php endfor; ?>
+                                            <?= number_format($note,1) ?>
+                                        <?php else: ?>
+                                            Pas encore de note
+                                        <?php endif; ?>
+                                    </small>
+                                </div>
                             </div>
+
+                            <!-- Trajet -->
+                            <h5 class="mb-2">
+                                <i class="bi bi-geo-alt-fill text-success me-1"></i>
+                                <?= htmlspecialchars($c->getVilleDepartNom() ?? 'Départ') ?>
+                                <span class="mx-1">→</span>
+                                <?= htmlspecialchars($c->getVilleArriveeNom() ?? 'Arrivée') ?>
+                            </h5>
+
+                            <!-- Informations -->
+                            <ul class="list-unstyled mb-3">
+                                <li><i class="bi bi-calendar3 text-success me-2"></i> <?= htmlspecialchars($c->getDateDepart() ?? '—') ?></li>
+                                <li><i class="bi bi-clock text-success me-2"></i> Départ : <?= htmlspecialchars($c->getHeureDepart() ?? '—') ?> | Arrivée : <?= htmlspecialchars($c->getHeureArrivee() ?? '—') ?></li>
+                                <li><i class="bi bi-people-fill text-success me-2"></i> Places : <?= htmlspecialchars($c->getNbPlaces() ?? 0) ?></li>
+                                <li><i class="bi bi-currency-euro text-success me-2"></i> Prix : <?= htmlspecialchars($c->getPrix() ?? 0) ?> €</li>
+                                <li><i class="bi bi-hourglass-split text-success me-2"></i> Durée : <?= htmlspecialchars($c->getDureeMinutes() ?? 0) ?> min</li>
+                                <li><i class="bi bi-car-front-fill text-success me-2"></i> Véhicule : <?= htmlspecialchars($c->getVehiculeNom() ?? '—') ?> - <?= htmlspecialchars($c->getVehiculeModele() ?? '—') ?></li>
+                                <li><i class="bi bi-info-circle-fill text-success me-2"></i> Statut : <?= htmlspecialchars($c->getStatut() ?? '—') ?></li>
+                            </ul>
+
+                            <!-- Actions -->
+                            <div class="mt-auto d-flex gap-2 flex-wrap">
+                                <a href="index.php?entity=covoiturages&action=detail_covoiturage&id=<?= (int)$c->getIdCovoiturage() ?>"
+                                   class="btn btn-outline-success btn-sm flex-fill">
+                                    <i class="bi bi-eye me-1"></i> Détails
+                                </a>
+                                <a href="index.php?entity=covoiturages&action=modifier_covoiturage&id=<?= (int)$c->getIdCovoiturage() ?>"
+                                   class="btn btn-outline-warning btn-sm flex-fill">
+                                    <i class="bi bi-pencil-fill me-1"></i> Modifier
+                                </a>
+                                <a href="index.php?entity=covoiturages&action=supprimer&id=<?= (int)$c->getIdCovoiturage() ?>"
+                                   class="btn btn-outline-danger btn-sm flex-fill"
+                                   onclick="return confirm('Voulez-vous vraiment supprimer ce covoiturage ?');">
+                                    <i class="bi bi-trash-fill me-1"></i> Supprimer
+                                </a>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <p class="text-center text-muted">Vous n'avez encore créé aucun covoiturage.</p>
+            <div class="col-12 text-center text-muted mt-5">
+                Vous n’avez créé aucun covoiturage pour le moment.
+            </div>
         <?php endif; ?>
     </div>
 </div>
 
-<script src="/assets/js/bootstrap/bootstrap.bundle.min.js"></script>
+<style>
+    .hover-card:hover {
+        transform: translateY(-4px);
+        transition: all 0.3s ease;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+    ul.list-unstyled li i {
+        width: 20px;
+        display: inline-block;
+    }
+</style>
+
 </body>
 </html>
