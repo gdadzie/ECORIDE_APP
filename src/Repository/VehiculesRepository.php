@@ -59,6 +59,25 @@ class VehiculesRepository
         }
     }
 
+    public function getEntityById(int $id): ?Vehicule
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM vehicules WHERE id_vehicule = :id");
+        $stmt->execute(['id' => $id]);
+        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$data) {
+            return null;
+        }
+
+        $vehicule = new Vehicule();
+        $vehicule->setIdVehicule($data['id_vehicule']);
+        $vehicule->setNomMarque($data['nom']);
+        $vehicule->setModele($data['modele']);
+        $vehicule->setEnergie($data['energie'] ?? null);
+        return $vehicule;
+    }
+
+
     // Récupérer les véhicules d’un utilisateur
     public function getVehiculesByUtilisateur(int $userId): array
     {
@@ -113,6 +132,44 @@ class VehiculesRepository
             return false;
         }
     }
+
+    public function findByIdVehicule(int $idVehicule): ?Vehicule
+    {
+        try {
+            $stmt = $this->conn->prepare("
+            SELECT v.*, m.nom_marque
+            FROM vehicules v
+            INNER JOIN marques m ON v.id_marque = m.id_marque
+            WHERE v.id_vehicule = :id
+        ");
+            $stmt->execute([':id' => $idVehicule]);
+
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) return null;
+
+            $vehicule = new Vehicule(
+                (int)($row['id_utilisateur'] ?? 0),
+                (int)($row['id_marque'] ?? 0),
+                $row['modele'] ?? null,
+                $row['couleur'] ?? null,
+                $row['energie'] ?? null,
+                $row['immatriculation'] ?? null,
+                $row['date_premiere_immatriculation'] ?? null,
+                isset($row['nb_places']) ? (int)$row['nb_places'] : null
+            );
+
+            $vehicule->setIdVehicule((int)$row['id_vehicule']);
+            $vehicule->setNomMarque($row['nom_marque'] ?? null);
+
+            return $vehicule;
+
+        } catch (PDOException $e) {
+            error_log("Erreur findByIdVehicule: " . $e->getMessage());
+            return null;
+        }
+    }
+
 
 
 }

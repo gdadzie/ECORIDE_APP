@@ -14,6 +14,7 @@ class CovoituragesRepository
 {
     private ?PDO $conn = null;
     private ?string $lastError = null;
+    private CreditsRepository $creditsRepo;
 
     // ────────────────────────────────
     // 🔹 Constructeur
@@ -25,6 +26,7 @@ class CovoituragesRepository
             $error = Database::getLastError() ?? "Connexion à la base de données impossible.";
             throw new \RuntimeException($error);
         }
+        $this->creditsRepo = new CreditsRepository($this->conn);
     }
 
     // ────────────────────────────────
@@ -52,40 +54,39 @@ class CovoituragesRepository
     private function hydrateCovoiturage(array $row): Covoiturage
     {
         $covoiturage = new Covoiturage();
+
         $covoiturage->setIdCovoiturage($row['id_covoiturage']);
         $covoiturage->setIdUtilisateur($row['id_utilisateur']);
+
+        // ⭐ IMPORTANT : ID DU VÉHICULE ⭐
+        if (isset($row['id_vehicule'])) {
+            $covoiturage->setIdVehicule((int)$row['id_vehicule']);
+        }
+
         $covoiturage->setVilleDepart($row['ville_depart']);
         $covoiturage->setVilleArrivee($row['ville_arrivee']);
 
-        // -----------------------------
-        // FORMATAGE DE LA DATE EN FRANÇAIS
-        // -----------------------------
-        // Définir la locale française (Unix et Windows)
-        setlocale(LC_TIME, 'fr_FR.UTF-8', 'fra', 'fr_FR', 'French_France');
-
+        // Date + heure
         if (!empty($row['date_depart'])) {
-            $timestamp = strtotime($row['date_depart']);
-            // Format : lun 15 jan 2025
-            $dt = new DateTime($row['date_depart']);
-            $formattedDate = $dt->format('d/m/Y'); // ou 'd F Y' selon le format souhaité
-
+            $covoiturage->setDateDepart($row['date_depart']);
         } else {
             $covoiturage->setDateDepart('—');
         }
 
         $covoiturage->setHeureDepart($row['heure_depart']);
 
-        // Calcul de l'heure d'arrivée
+        // Heure d’arrivée
         $heureArrivee = $this->calculerHeureArrivee(
             $row['heure_depart'] ?? null,
             (int)($row['duree_minutes'] ?? 0)
         );
         $covoiturage->setHeureArrivee($heureArrivee);
 
+        // Places / prix
         $covoiturage->setNbPlaces($row['nb_places']);
         $covoiturage->setPrix($row['prix']);
 
-        // Villes jointes
+        // Noms des villes
         $covoiturage->setVilleDepartNom($row['ville_depart_nom']);
         $covoiturage->setVilleArriveeNom($row['ville_arrivee_nom']);
 
@@ -97,9 +98,8 @@ class CovoituragesRepository
         $conducteur->setNote($row['note_conducteur'] ?? null);
         $covoiturage->setConducteur($conducteur);
 
-        // --- Véhicule ---
-        $covoiturage->setVehiculeNom($row['vehicule_nom'] ?? null);
-        $covoiturage->setVehiculeModele($row['vehicule_modele'] ?? null);
+        // --- Véhicule : ne rien mettre ici ---
+        // Le véhicule sera chargé dans le contrôleur avec VehiculesRepository
 
         return $covoiturage;
     }
@@ -224,19 +224,6 @@ class CovoituragesRepository
         }
     }
 
-    /**
-     * Mettre à jour le statut d’un covoiturage
-     */
-    public function updateStatutCovoiturage(int $id, string $statut): bool
-    {
-        try {
-            $stmt = $this->conn->prepare("UPDATE covoiturages SET statut = :statut WHERE id_covoiturage = :id");
-            return $stmt->execute([':statut' => $statut, ':id' => $id]);
-        } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
-            return false;
-        }
-    }
 
     // ────────────────────────────────
     // 🔹 Recherche et filtrage
@@ -435,5 +422,22 @@ class CovoituragesRepository
 
         return $result && $result['moyenne'] !== null ? (float)$result['moyenne'] : null;
     }
+
+
+    //===================MISE A JOUR NBPLACES ET STATUT COVOITURAGE==================//
+    public function updatePlacesAndStatut(int $covoiturageId, int $nbPlaces, string $statut): bool
+    {
+        $stmt = $this->con->prepare("
+        UPDATE covoiturage 
+        SET nb_places = :nbPlaces, statut = :statut 
+        WHERE id_covoiturage = :id
+    ");
+        return $stmt->execute([
+            'nbPlaces' => $nbPlaces,
+            'statut'   => $statut,
+            'id'       => $covoiturageId
+        ]);
+    }
+
 
 }
