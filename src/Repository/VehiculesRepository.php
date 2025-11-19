@@ -71,7 +71,7 @@ class VehiculesRepository
 
         $vehicule = new Vehicule();
         $vehicule->setIdVehicule($data['id_vehicule']);
-        $vehicule->setNomMarque($data['nom']);
+        $vehicule->setNomMarque($data['id_marque']);
         $vehicule->setModele($data['modele']);
         $vehicule->setEnergie($data['energie'] ?? null);
         return $vehicule;

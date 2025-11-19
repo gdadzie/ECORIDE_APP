@@ -1,0 +1,73 @@
+.card-covoiturage {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    background-color: #fff;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-covoiturage:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.card-body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-covoiturage h5 {
+    font-weight: 600;
+    color: #1b5e20;
+    margin-bottom: 10px;
+}
+
+.card-covoiturage p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.card-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-eco { background-color: #4caf50; color: #fff; border-radius: 6px; border: none; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; transition: background-color 0.2s, transform 0.2s; }
+.btn-eco:hover { background-color: #388e3c; transform: translateY(-1px); }
+
+.btn-modifier { background-color: #ffb74d; color: #212529; border-radius: 6px; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; border: none; transition: background-color 0.2s, transform 0.2s; }
+.btn-modifier:hover { background-color: #fb8c00; transform: translateY(-1px); }
+
+.btn-supprimer { background-color: #e57373; color: #fff; border-radius: 6px; padding: 8px 14px; font-size: 0.9rem; text-decoration: none; text-align: center; border: none; transition: background-color 0.2s, transform 0.2s; }
+.btn-supprimer:hover { background-color: #d32f2f; transform: translateY(-1px); }
+
+.btn-eco, .btn-modifier, .btn-supprimer { display: inline-block; cursor: pointer; line-height: 1.5; }
+.btn-eco:focus, .btn-modifier:focus, .btn-supprimer:focus { outline: none; box-shadow: 0 0 0 3px rgba(76,175,80,0.4); }
+
+.row-cards { display: flex; flex-wrap: wrap; gap: 20px; }
+.col-card { flex: 1 1 100%; }
+@media (min-width: 576px) { .col-card { flex: 1 1 calc(50% - 20px); } }
+@media (min-width: 992px) { .col-card { flex: 1 1 calc(33.333% - 20px); } }
+@media (min-width: 1400px) { .col-card { flex: 1 1 calc(25% - 20px); } }
+
+/*****TEST******/
+.hover-shadow:hover {
+    transform: translateY(-3px);
+    transition: all 0.3s ease;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+.card-title i {
+    margin-right: 5px;
+}
+.list-unstyled li i {
+    margin-right: 8px;
+    color: #305934;
+}
+/*****TEST******/

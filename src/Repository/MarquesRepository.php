@@ -4,6 +4,7 @@ namespace Repository;
 
 
 
+use Entity\Marque;
 use PDO;
 
 class MarquesRepository
@@ -38,7 +39,7 @@ class MarquesRepository
      */
     public function find(int $id): ?Marque
     {
-        $stmt = $this->db->prepare("SELECT id_marque, nom_marque FROM marque WHERE id_marque = ?");
+        $stmt = $this->conn->prepare("SELECT id_marque, nom_marque FROM marques WHERE id_marque = ?");
         $stmt->execute([$id]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

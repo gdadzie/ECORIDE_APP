@@ -1,0 +1,18 @@
+.card {
+    border-radius: 1rem;
+    padding: 1.5rem;
+    max-width: 700px;
+    width: 100%;
+}
+
+.card img {
+    border: 2px solid #ddd;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+ul.list-unstyled li {
+    margin-bottom: 0.3rem;
+}

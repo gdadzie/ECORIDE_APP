@@ -67,20 +67,27 @@ class CovoituragesRechercheController
 
     public function formRechercheCovoiturages(): void
     {
-        require_once __DIR__ . '/../View/partials/covoiturages/formulaire_recherche_covoiturages.php';
+        require_once __DIR__ . '/../../View/accueil/index2.php';
     }
 
     public function resultatsRecherche(): void
     {
-        $ville       = $_GET['ville_depart'] ?? $_GET['ville_arrivee'] ?? '';
+        // Récupération sécurisée des paramètres GET
+        $depart      = $_GET['ville_depart'] ?? null;
+        $arrivee     = $_GET['ville_arrivee'] ?? null;
         $dateDepart  = $_GET['date_depart'] ?? null;
-        $heureDepart = $_GET['heure_depart'] ?? null;
 
-        $covoiturages = !empty($ville)
-            ? $this->repo->rechercherCovoituragesSouples($ville, $dateDepart, $heureDepart)
-            : [];
+        // Vérifier si au moins un filtre est présent
+        if ($depart || $arrivee || $dateDepart) {
+            // Appel de la fonction flexible avec les valeurs fournies
+            $covoiturages = $this->repo->findCovoiturageByDepartArriveeDate($depart, $arrivee, $dateDepart);
+        } else {
+            // Aucun filtre fourni : résultat vide
+            $covoiturages = [];
+        }
 
-        require __DIR__ . '/../../View/covoiturages/resultats_recherches_covoiturages.php';
+        // Inclusion de la vue
+        require __DIR__ . '/../../View/accueil/resultats_recherches_covoiturages.php';
     }
 
 }

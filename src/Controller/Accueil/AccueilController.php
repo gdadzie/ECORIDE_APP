@@ -14,7 +14,7 @@ class AccueilController
     //-------------------- ACCES A LA PAGE D ACCUEIL --------------------//
     public function index(): void       // Route vers la page d'accueil de l'application Ecoride
     {
-        require __DIR__ . '/../../View/accueil/index.php';
+        require __DIR__ . '/../../View/accueil/index2.php';
     }
     //-------------------- DECONNEXION --------------------//
     public function logout(): void

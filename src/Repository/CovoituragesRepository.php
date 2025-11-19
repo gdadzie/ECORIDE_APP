@@ -3,6 +3,7 @@
 namespace Repository;
 
 use Config\Database;
+use Entity\Marque;
 use Entity\Utilisateur;
 use PDO;
 use PDOException;
@@ -53,14 +54,19 @@ class CovoituragesRepository
 
     private function hydrateCovoiturage(array $row): Covoiturage
     {
+
         $covoiturage = new Covoiturage();
+        $marque = new Marque();
+
 
         $covoiturage->setIdCovoiturage($row['id_covoiturage']);
         $covoiturage->setIdUtilisateur($row['id_utilisateur']);
 
-        // ⭐ IMPORTANT : ID DU VÉHICULE ⭐
+        // ⭐ IMPORTANT : ID DU VÉHICULE + NOM VEHICULE ⭐
         if (isset($row['id_vehicule'])) {
+
             $covoiturage->setIdVehicule((int)$row['id_vehicule']);
+
         }
 
         $covoiturage->setVilleDepart($row['ville_depart']);
@@ -91,12 +97,12 @@ class CovoituragesRepository
         $covoiturage->setVilleArriveeNom($row['ville_arrivee_nom']);
 
         // --- Conducteur ---
-        $conducteur = new Utilisateur();
-        $conducteur->setIdUtilisateur($row['id_utilisateur']);
-        $conducteur->setPseudo($row['pseudo']);
-        $conducteur->setPhoto($row['photo']);
-        $conducteur->setNote($row['note_conducteur'] ?? null);
-        $covoiturage->setConducteur($conducteur);
+        $utilisateur = new Utilisateur();
+        $utilisateur->setIdUtilisateur($row['id_utilisateur']);
+        $utilisateur->setPseudo($row['pseudo']);
+        $utilisateur->setPhoto($row['photo']);
+        $utilisateur->setNote($row['note'] ?? null);
+        $covoiturage->setConducteur($utilisateur);
 
         // --- Véhicule : ne rien mettre ici ---
         // Le véhicule sera chargé dans le contrôleur avec VehiculesRepository
@@ -152,7 +158,7 @@ class CovoituragesRepository
     /**
      * Récupérer tous les covoiturages
      */
-    public function getAllEntities(): array
+    public function findAll(): array
     {
         try {
             $stmt = $this->conn->query("
@@ -190,25 +196,84 @@ class CovoituragesRepository
     /**
      * Récupérer un covoiturage par son ID
      */
-    public function getEntityById(int $id): ?Covoiturage
+    public function findById(int $id): ?Covoiturage
     {
         try {
             $stmt = $this->conn->prepare("
-                SELECT c.*, u.pseudo, u.photo, vd.nom_ville AS ville_depart_nom, va.nom_ville AS ville_arrivee_nom
-                FROM covoiturages c
-                JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
-                JOIN villes vd ON c.ville_depart = vd.id_ville
-                JOIN villes va ON c.ville_arrivee = va.id_ville
-                WHERE c.id_covoiturage = :id
-            ");
+                               SELECT 
+                        c.*,
+                        u.id_utilisateur,
+                        u.pseudo,
+                        u.photo,
+                    
+                        -- Moyenne des notes reçues
+                        (
+                            SELECT COALESCE(AVG(a1.note), 0)
+                            FROM avis a1
+                            WHERE a1.id_receveur = u.id_utilisateur
+                        ) AS note_utilisateur,
+                    
+                        -- Avis reçus (liste)
+                        (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'id_avis', a2.id_avis,
+                                    'note', a2.note,
+                                    'commentaire', a2.commentaire,
+                                    'id_emetteur', a2.id_emetteur
+                                )
+                            )
+                            FROM avis a2
+                            WHERE a2.id_receveur = u.id_utilisateur
+                        ) AS avis_recus,
+                    
+                        -- Avis envoyés (liste)
+                        (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'id_avis', a3.id_avis,
+                                    'note', a3.note,
+                                    'commentaire', a3.commentaire,
+                                    'id_receveur', a3.id_receveur
+                                )
+                            )
+                            FROM avis a3
+                            WHERE a3.id_emetteur = u.id_utilisateur
+                        ) AS avis_envoyes,
+                    
+                        v.id_vehicule,
+                        m.nom_marque AS vehicule_nom,
+                        v.modele AS vehicule_modele,
+                        vd.nom_ville AS ville_depart_nom,
+                        va.nom_ville AS ville_arrivee_nom
+                    
+                    FROM covoiturages c
+                    LEFT JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+                    LEFT JOIN vehicules v ON c.id_vehicule = v.id_vehicule
+                    LEFT JOIN marques m ON v.id_marque = m.id_marque
+                    LEFT JOIN villes vd ON c.ville_depart = vd.id_ville
+                    LEFT JOIN villes va ON c.ville_arrivee = va.id_ville
+                    
+                    WHERE c.id_covoiturage = :id;
+
+
+        ");
             $stmt->execute([':id' => $id]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $row ? $this->hydrateCovoiturage($row) : null;
+
+            if (!$row) return null;
+
+            // Utiliser hydrateCovoiturage pour que tout soit correctement rempli
+            return $this->hydrateCovoiturage($row);
+
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
             return null;
         }
     }
+
+
+
 
     /**
      * Supprimer un covoiturage
@@ -232,7 +297,7 @@ class CovoituragesRepository
     /**
      * Filtrer par covoiturage écologique
      */
-    public function filterByEcologique(int $eco = 1): array
+    public function findByEcologique(int $eco = 1): array
     {
         try {
             $stmt = $this->conn->prepare("
@@ -244,7 +309,7 @@ class CovoituragesRepository
                 WHERE c.ecologique = :eco
                 ORDER BY c.date_depart ASC, c.heure_depart ASC
             ");
-            $stmt->execute([':eco' => $eco]);
+            $stmt->execute([':ecologique' => $eco]);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return array_map([$this, 'hydrateCovoiturage'], $rows);
         } catch (PDOException $e) {
@@ -302,7 +367,7 @@ class CovoituragesRepository
      * @param string|null $date Date de départ (format 'YYYY-MM-DD')
      * @return Entity\Covoiturage[]
      */
-    public function rechercherCovoiturages(?string $depart, ?string $arrivee, ?string $date): array
+    public function findCovoiturageByDepartArriveeDate(?string $depart, ?string $arrivee, ?string $date): array
     {
         $sql = "
         SELECT 
@@ -425,19 +490,79 @@ class CovoituragesRepository
 
 
     //===================MISE A JOUR NBPLACES ET STATUT COVOITURAGE==================//
-    public function updatePlacesAndStatut(int $covoiturageId, int $nbPlaces, string $statut): bool
+    /**
+     * Met à jour le nombre de places et ajuste le statut automatiquement
+     *
+     * @param int $covoiturageId ID du covoiturage
+     * @param int $nbPlaces Nombre de places restantes
+     * @param string|null $statut Nouveau statut du covoiturage (optionnel)
+     * @return bool Succès ou échec
+     */
+    public function updatePlacesAndStatut(int $covoiturageId, int $nbPlaces, ?string $statut = null): bool
     {
-        $stmt = $this->con->prepare("
-        UPDATE covoiturage 
-        SET nb_places = :nbPlaces, statut = :statut 
-        WHERE id_covoiturage = :id
-    ");
+        try {
+            // Si nbPlaces = 0, on force le statut à "complet"
+            if ($nbPlaces <= 0) {
+                $statut = 'complet';
+                $nbPlaces = 0; // sécurité
+            } elseif ($statut === null) {
+                // Si le statut n'est pas fourni et qu'il reste des places
+                $statut = 'disponible';
+            }
+
+            $stmt = $this->conn->prepare("
+            UPDATE covoiturages
+            SET nb_places = :nbPlaces, statut = :statut
+            WHERE id_covoiturage = :id
+        ");
+
+            $success = $stmt->execute([
+                ':nbPlaces' => $nbPlaces,
+                ':statut'   => $statut,
+                ':id'       => $covoiturageId
+            ]);
+
+            if (!$success) {
+                $this->lastError = implode(" | ", $stmt->errorInfo());
+            }
+
+            return $success;
+
+        } catch (\PDOException $e) {
+            $this->lastError = $e->getMessage();
+            error_log("Erreur updatePlacesAndStatut : " . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    public function update(Covoiturage $covoiturage): bool
+    {
+        $sql = "UPDATE covoiturages SET 
+        ville_depart = :ville_depart,
+        ville_arrivee = :ville_arrivee,
+        date_depart = :date_depart,
+        heure_depart = :heure_depart,
+        duree_minutes = :duree_minutes,
+        prix = :prix,
+        nb_places = :nb_places,
+        description = :description
+        WHERE id_covoiturage = :id";
+
+        $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
-            'nbPlaces' => $nbPlaces,
-            'statut'   => $statut,
-            'id'       => $covoiturageId
+            ':ville_depart' => $covoiturage->getVilleDepart(),
+            ':ville_arrivee' => $covoiturage->getVilleArrivee(),
+            ':date_depart' => $covoiturage->getDateDepart(),
+            ':heure_depart' => $covoiturage->getHeureDepart(),
+            ':duree_minutes' => $covoiturage->getDureeMinutes(),
+            ':prix' => $covoiturage->getPrix(),
+            ':nb_places' => $covoiturage->getNbPlaces(),
+            ':description' => $covoiturage->getDescription(),
+            ':id' => $covoiturage->getIdCovoiturage()
         ]);
     }
+
 
 
 }

@@ -21,6 +21,14 @@ class Utilisateur
     private ?string $date_creation = null;
     private ?float $note = null;
     private ?float $nb_avis = null;
+    private ?bool $animaux = null;  // <-- ajoute cette ligne
+    private ?bool $fumeur = null;
+    private array $vehicules = [];
+    private float $credit ;
+    private bool $est_conducteur = false;
+    private bool $est_passager = true;
+
+
 
     /**
      * Constructeur flexible
@@ -36,8 +44,10 @@ class Utilisateur
         string $type_utilisateur = 'passager',
         int $actif = 1,
         string $photo = '',
-        string $date_creation = ''
-    ) {
+        string $date_creation = '',
+
+
+) {
         $this->nom = $nom;
         $this->prenom = $prenom;
         $this->pseudo = $pseudo;
@@ -69,6 +79,10 @@ class Utilisateur
 
     public function getNbAvis(): ?float { return $this->nb_avis; }
 
+    public function getAnimaux(): ?bool { return $this->animaux; }
+    public function getFumeur(): ?bool { return $this->fumeur; }
+
+
     // -----------------------
     // Setters
     // -----------------------
@@ -83,10 +97,56 @@ class Utilisateur
     public function setTypeUtilisateur(?string $type_utilisateur): void { $this->type_utilisateur = $type_utilisateur; }
     public function setActif(?int $actif): void { $this->actif = $actif; }
     public function setPhoto(?string $photo): void { $this->photo = $photo; }
+    public function isConducteur(): bool {
+        return $this->est_conducteur;
+    }
+
+    public function isPassager(): bool {
+        return $this->est_passager;
+    }
+
+    public function setEstConducteur(bool $val): void {
+        $this->est_conducteur = $val;
+    }
+
+    public function setEstPassager(bool $val): void {
+        $this->est_passager = $val;
+    }
     public function setDateCreation(?string $date_creation): void { $this->date_creation = $date_creation; }
     public function getNote(): ?float { return $this->note; }
     public function setNote(?float $note): void { $this->note = $note; }
 
     public function setNbAvis(?float $nb_avis): void { $this->nb_avis = $nb_avis; }
+
+    public function setAnimaux(?bool $animaux): void
+    {
+        $this->animaux = $animaux;
+    }
+
+    public function setFumeur(?bool $fumeur): void
+    {
+        $this->fumeur = $fumeur;
+    }
+    public function getVehicules(): array
+    {
+        return $this->vehicules;
+    }
+
+    public function setVehicules(array $vehicules): void
+    {
+        $this->vehicules = $vehicules;
+    }
+
+    public function getCredit (): ?float
+    {
+        return $this->credit;
+
+    }
+
+    public function setCredit (?float $credit): void
+    {
+        $this->credit = $credit;
+    }
+
 
 }

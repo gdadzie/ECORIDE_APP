@@ -1,9 +1,7 @@
 <?php
-
 namespace Repository;
 
 use Entity\Reservation;
-use Repository\CovoituragesRepository;
 use PDO;
 
 class ReservationRepository
@@ -15,17 +13,24 @@ class ReservationRepository
         $this->conn = $conn;
     }
 
+    public function getConn(): PDO
+    {
+        return $this->conn;
+    }
+
     // Enregistre une nouvelle réservation
     public function save(Reservation $reservation): bool
     {
         $stmt = $this->conn->prepare("
-            INSERT INTO reservation (id_utilisateur, id_covoiturage, date_reservation)
-            VALUES (:id_utilisateur, :id_covoiturage, :date)
+            INSERT INTO reservation (id_utilisateur, id_covoiturage, date_reservation, statut, confirmation)
+            VALUES (:id_utilisateur, :id_covoiturage, :date_reservation, :statut, :confirmation)
         ");
         return $stmt->execute([
-            'id_utilisateur' => $reservation->getUtilisateur()->getIdUtilisateur(),
-            'id_covoiturage' => $reservation->getCovoiturage()->getIdCovoiturage(),
-            'date' => $reservation->getDate()->format('Y-m-d H:i:s'),
+            'id_utilisateur' => $reservation->getIdUtilisateur(),
+            'id_covoiturage' => $reservation->getIdCovoiturage(),
+            'date_reservation' => $reservation->getDateReservation(),
+            'statut' => $reservation->getStatut(),
+            'confirmation' => $reservation->getConfirmation(),
         ]);
     }
 }

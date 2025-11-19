@@ -1,14 +1,14 @@
 /* Barre de navigation, menus, logo */
 
 .navbar {
-    background-color: #FFFFFF !important;
+    background-color: #2e7d32;
     border-bottom: 1px solid #E0E0E0;
     padding: 0.8rem 1rem;
 }
 
 /* Liens du menu */
 .nav-link {
-    color: #198654FF !important;
+    color: #edf8f3 !important;
     font-weight: 500;
     transition: color 0.3s ease;
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace Repository;
 
 use PDO;
@@ -14,23 +13,19 @@ class CreditsRepository
         $this->conn = $conn;
     }
 
-    /**
-     * Récupère le nombre de crédits d'un utilisateur
-     */
-    public function getCreditsByUtilisateur(Utilisateur $user): int
+    // Récupère les crédits d'un utilisateur
+    public function getCreditsByUtilisateur(Utilisateur $user): ?object
     {
-        $stmt = $this->conn->prepare("SELECT credit FROM credits WHERE id_utilisateur = :idUtilisateur");
-        $stmt->execute([
-            'idUtilisateur' => $user->getIdUtilisateur()
-        ]);
+        $stmt = $this->conn->prepare(
+            "SELECT credit FROM credits WHERE id_utilisateur = :idUtilisateur"
+        );
+        $stmt->execute(['idUtilisateur' => $user->getIdUtilisateur()]);
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['credit'] ?? 0;
+        return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
 
-    /**
-     * Met à jour le nombre de crédits d'un utilisateur
-     */
+
+    // Met à jour les crédits d'un utilisateur
     public function updateCredits(Utilisateur $user, float $creditSolde): bool
     {
         $stmt = $this->conn->prepare("
@@ -38,9 +33,8 @@ class CreditsRepository
             SET credit = :creditSolde 
             WHERE id_utilisateur = :idUtilisateur
         ");
-
         return $stmt->execute([
-            'creditSolde'   => $creditSolde,
+            'creditSolde' => $creditSolde,
             'idUtilisateur' => $user->getIdUtilisateur()
         ]);
     }

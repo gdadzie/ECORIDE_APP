@@ -1,10 +1,13 @@
 <?php
+
 namespace Entity;
+use DateTime;
 
 class Covoiturage
+
 {
     // ============================
-    // PROPRIÉTÉS PRINCIPALES
+    // INFOS PRINCIPALES DU TRAJET
     // ============================
     private ?int $id_covoiturage = null;
     private ?int $id_utilisateur = null;
@@ -14,29 +17,57 @@ class Covoiturage
     private ?string $date_depart = null;
     private ?string $heure_depart = null;
     private ?string $heure_arrivee = null;
+    private ?int $duree_minutes = null;
     private ?float $distance_km = null;
     private ?float $prix = null;
     private ?int $nb_places = null;
-    private ?bool $ecologique = null;
-    private ?int $duree_minutes = null;
+    private ?bool $ecologique = false;
     private ?string $statut = 'en attente';
-
-    // ============================
-    // ATTRIBUTS POUR AFFICHAGE / RELATIONS
-    // ============================
-    private ?string $ville_depart_nom = null;
-    private ?string $ville_arrivee_nom = null;
-    private ?string $pseudo = null;
-    private ?string $photo = null;
-    private ?float $note = null;
-    private ?Transaction $transaction = null;
-    private ?Utilisateur $conducteur = null;
     private ?string $description = null;
 
     // ============================
-    // CONSTRUCTEUR FLEXIBLE
+    // CONDUCTEUR / UTILISATEUR
+    // ============================
+    private ?Utilisateur $conducteur = null;
+    private ?string $pseudo = null;
+    private ?string $photo = null;
+    private ?float $note = null;
+
+
+
+    // ============================
+    // VEHICULE
+    // ============================
+    private ?array $vehicules = [];       // Tableau d'objets véhicules liés
+    private ?string $vehiculeNom = null;
+    private ?string $vehiculeModele = null;
+    private ?string $vehiculeEnergie =null;
+    private bool $vehiculeEcologique = false;
+
+    // ============================
+    // OPTIONS
+    // ============================
+    private ?bool $fumeur = null;
+    private ?bool $animaux = null;
+
+    // ============================
+    // TRANSACTION
+    // ============================
+    private ?Transaction $transaction = null;
+
+    // ============================
+    // VILLES POUR AFFICHAGE
+    // ============================
+    private ?string $ville_depart_nom = null;
+    private ?string $ville_arrivee_nom = null;
+
+    private ?string $dateDepartFormatee = null;
+
+    // ============================
+    // CONSTRUCTEUR
     // ============================
     public function __construct(
+
         ?int $id_utilisateur = null,
         ?int $id_vehicule = null,
         ?string $ville_depart = null,
@@ -54,33 +85,46 @@ class Covoiturage
         ?float $note = null,
         ?Transaction $transaction = null,
         ?Utilisateur $conducteur = null,
-        ?string $description = null
+        ?string $description = null,
+        ?string $vehiculeEnergie = null,
+        bool $vehiculeEcologique = false,
+
     ) {
-        $this->id_utilisateur   = $id_utilisateur;
-        $this->id_vehicule      = $id_vehicule;
-        $this->ville_depart      = $ville_depart;
-        $this->ville_arrivee     = $ville_arrivee;
-        $this->date_depart       = $date_depart;
-        $this->heure_depart      = $heure_depart;
-        $this->duree_minutes     = $duree_minutes;
-        $this->distance_km       = $distance_km;
-        $this->prix              = $prix;
-        $this->nb_places         = $nb_places;
-        $this->ecologique        = $ecologique;
-        $this->statut            = $statut;
-        $this->pseudo            = $pseudo;
-        $this->photo             = $photo;
-        $this->note              = $note;
-        $this->transaction       = $transaction;
-        $this->conducteur        = $conducteur;
-        $this->description       = $description;
+        // Infos principales
+        $this->id_utilisateur = $id_utilisateur;
+        $this->id_vehicule = $id_vehicule;
+        $this->ville_depart = $ville_depart;
+        $this->ville_arrivee = $ville_arrivee;
+        $this->date_depart = $date_depart;
+        $this->heure_depart = $heure_depart;
+        $this->duree_minutes = $duree_minutes;
+        $this->distance_km = $distance_km;
+        $this->prix = $prix;
+        $this->nb_places = $nb_places;
+        $this->ecologique = $ecologique;
+        $this->statut = $statut;
+        $this->description = $description;
+
+        //Vehicule
+        $this->vehiculeEnergie = $vehiculeEnergie;
+        $this->vehiculeEcologique = $vehiculeEcologique;
+
+        // Conducteur
+        $this->pseudo = $pseudo;
+        $this->photo = $photo;
+        $this->note = $note;
+        $this->conducteur = $conducteur;
+
+        // Transaction
+        $this->transaction = $transaction;
 
         // Calcul automatique de l'heure d'arrivée si possible
         $this->heure_arrivee = $this->calculerHeureArrivee();
+
     }
 
     // ============================
-    // GETTERS & SETTERS
+    // GETTERS & SETTERS TRAJET
     // ============================
     public function getIdCovoiturage(): ?int { return $this->id_covoiturage; }
     public function setIdCovoiturage(?int $id): void { $this->id_covoiturage = $id; }
@@ -109,6 +153,12 @@ class Covoiturage
     public function getHeureArrivee(): ?string { return $this->heure_arrivee; }
     public function setHeureArrivee(?string $heure): void { $this->heure_arrivee = $heure; }
 
+    public function getDureeMinutes(): ?int { return $this->duree_minutes; }
+    public function setDureeMinutes(?int $minutes): void {
+        $this->duree_minutes = $minutes;
+        $this->heure_arrivee = $this->calculerHeureArrivee();
+    }
+
     public function getDistanceKm(): ?float { return $this->distance_km; }
     public function setDistanceKm(?float $km): void { $this->distance_km = $km; }
 
@@ -121,20 +171,17 @@ class Covoiturage
     public function isEcologique(): ?bool { return $this->ecologique; }
     public function setEcologique(?bool $eco): void { $this->ecologique = $eco; }
 
-    public function getDureeMinutes(): ?int { return $this->duree_minutes; }
-    public function setDureeMinutes(?int $minutes): void {
-        $this->duree_minutes = $minutes;
-        $this->heure_arrivee = $this->calculerHeureArrivee();
-    }
-
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(?string $statut): void { $this->statut = $statut; }
 
-    public function getVilleDepartNom(): ?string { return $this->ville_depart_nom; }
-    public function setVilleDepartNom(?string $nom): void { $this->ville_depart_nom = $nom; }
+    public function getDescription(): ?string { return $this->description; }
+    public function setDescription(?string $desc): void { $this->description = $desc; }
 
-    public function getVilleArriveeNom(): ?string { return $this->ville_arrivee_nom; }
-    public function setVilleArriveeNom(?string $nom): void { $this->ville_arrivee_nom = $nom; }
+    // ============================
+    // GETTERS & SETTERS CONDUCTEUR
+    // ============================
+    public function getConducteur(): ?Utilisateur { return $this->conducteur; }
+    public function setConducteur(?Utilisateur $u): void { $this->conducteur = $u; }
 
     public function getPseudo(): ?string { return $this->pseudo; }
     public function setPseudo(?string $pseudo): void { $this->pseudo = $pseudo; }
@@ -145,22 +192,68 @@ class Covoiturage
     public function getNote(): ?float { return $this->note; }
     public function setNote(?float $note): void { $this->note = $note; }
 
+    // ============================
+    // GETTERS & SETTERS VEHICULE
+    // ============================
+    public function getVehicules(): array { return $this->vehicules; }
+    public function setVehicules(array $vehicules): void { $this->vehicules = $vehicules; }
+
+    public function getVehiculeNom(): ?string { return $this->vehiculeNom; }
+    public function setVehiculeNom(?string $nom): void { $this->vehiculeNom = $nom; }
+
+    public function getVehiculeModele(): ?string { return $this->vehiculeModele; }
+    public function setVehiculeModele(?string $modele): void { $this->vehiculeModele = $modele; }
+
+    public function getVehiculeEnergie(): ?string
+
+    {
+       return $this->vehiculeEnergie;
+    }
+
+    // ============================
+    // GETTERS & SETTERS OPTIONS
+    // ============================
+    public function getFumeur(): ?bool { return $this->fumeur; }
+    public function setFumeur(?bool $val): void { $this->fumeur = $val; }
+
+    public function getAnimaux(): ?bool { return $this->animaux; }
+    public function setAnimaux(?bool $val): void { $this->animaux = $val; }
+
+    public function getDateDepartFormatee(): ?string {
+        if ($this->date_depart === null) return null;
+        $dt = DateTime::createFromFormat('Y-m-d', $this->date_depart);
+        return $dt ? $dt->format('d/m/Y') : null;
+    }
+
+
+    public function setDateDepartFormatee(string $date): void {
+        $this->dateDepartFormatee = $date;
+    }
+
+    // ============================
+    // GETTERS & SETTERS TRANSACTION
+    // ============================
     public function getTransaction(): ?Transaction { return $this->transaction; }
     public function setTransaction(?Transaction $transaction): void { $this->transaction = $transaction; }
 
-    public function getConducteur(): ?Utilisateur { return $this->conducteur; }
-    public function setConducteur(?Utilisateur $u): void { $this->conducteur = $u; }
+    public function getModePaiement(): ?string { return $this->transaction?->getType(); }
 
-    public function getDescription(): ?string { return $this->description; }
-    public function setDescription(?string $desc): void { $this->description = $desc; }
+    // ============================
+    // GETTERS & SETTERS VILLES AFFICHAGE
+    // ============================
+    public function getVilleDepartNom(): ?string { return $this->ville_depart_nom; }
+    public function setVilleDepartNom(?string $nom): void { $this->ville_depart_nom = $nom; }
 
-    public function getModePaiement(): ?string {
-        return $this->transaction?->getType();
-    }
+    public function getVilleArriveeNom(): ?string { return $this->ville_arrivee_nom; }
+    public function setVilleArriveeNom(?string $nom): void { $this->ville_arrivee_nom = $nom; }
 
     // ============================
     // MÉTHODES UTILES
     // ============================
+
+    /**
+     * Calcule automatiquement l'heure d'arrivée à partir de l'heure de départ et de la durée
+     */
     public function calculerHeureArrivee(): string {
         if (empty($this->heure_depart) || empty($this->duree_minutes) || $this->duree_minutes <= 0) {
             return '00:00:00';
@@ -174,6 +267,9 @@ class Covoiturage
         }
     }
 
+    /**
+     * Validation simple des informations essentielles du covoiturage
+     */
     public function validate(): bool {
         if (empty($this->ville_depart) || empty($this->ville_arrivee)) return false;
         if ($this->prix !== null && $this->prix < 0) return false;

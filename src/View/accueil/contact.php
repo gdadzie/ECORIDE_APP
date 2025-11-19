@@ -1,11 +1,51 @@
-<?php include __DIR__ . '/../layout.php'; ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRide - Accueil</title>
+    <link rel="stylesheet" href="assets/css/header/header.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e6f2e6; /* vert pâle */
+            color: #2e7d32;
+        }
+        .btn-eco {
+            background-color: #66bb6a;
+            color: white;
+        }
+        .btn-eco:hover {
+            background-color: #4caf50;
+            color: white;
+        }
+        footer {
+            background-color: #2e7d32;
+            color: white;
+            padding: 20px 0;
+        }
+        .hero {
+            padding: 60px 20px;
+            text-align: center;
+            background-color: #d9f0d9;
+            border-radius: 10px;
+        }
+        .search-bar input, .search-bar button {
+            border-radius: 0;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+
+<body>
+<!-- Inclure le menu -->
 <?php include __DIR__ . '/../partials/header.php'; ?>
 
 <header class="hero">
     <h1 class="fw-light">Contactez <strong>EcoRide</strong></h1>
     <p class="lead">Une question, une suggestion ? Nous sommes à votre écoute !</p>
 </header>
-
 <main class="container my-5">
     <div class="row g-4 align-items-center">
         <div class="col-md-6">
@@ -36,6 +76,8 @@
         </div>
     </div>
 </main>
+
+</body>
 
 <?php include __DIR__ . '/../partials/footer.php'; ?>
 

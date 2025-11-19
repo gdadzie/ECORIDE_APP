@@ -8,9 +8,12 @@ if (session_status() === PHP_SESSION_NONE) {
 $isConnected = isset($_SESSION['user']) && $_SESSION['user'] instanceof \Entity\Utilisateur;
 $userPseudo = $isConnected ? $_SESSION['user']->getPseudo() : '';
 ?>
+<head>
+    <link rel="stylesheet" type="text/css" href="assets/css/header/header.css">
+</head>
 
 <header class="mb-5">
-    <nav class="navbar navbar-expand-lg navbar-theme-green fixed-top px-4 py-3">
+    <nav class="navbar navbar-expand-lg  navbar-theme-green fixed-top px-4 py-3">
         <div class="container">
             <a class="navbar-brand fw-bold fs-3 text-light font-test" href="index.php">ECORIDE</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">

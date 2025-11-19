@@ -6,7 +6,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
-<form id="form-recherche" method="GET" action="index.php" class="search-form formulaire-recherche">
+<form id="form-recherchei" method="GET" action="index.php" class="search-form formulaire-recherche">
     <!-- Champs cachés pour le routeur -->
     <input type="hidden" name="entity" value="covoiturages">
     <input type="hidden" name="action" value="resultats_recherche">

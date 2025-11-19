@@ -8,106 +8,35 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Tableau de bord</title>
-    <link href="/assets/css/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../../public/assets/css/menu/header.css">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f8f6;
-            margin: 0;
-            padding: 0;
-        }
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 15px;
-        }
-        .dashboard-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            margin-bottom: 50px;
-        }
-        .dashboard-header h2 {
-            color: #198754;
-            font-weight: 700;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-        .user-photo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #198754;
-            margin-bottom: 15px;
-        }
-        .btn-logout {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
-        .btn-logout:hover {
-            color: #198754;
-        }
-        .card-dashboard {
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            transition: transform 0.2s ease-in-out;
-            background-color: #fff;
-            height: 100%;
-        }
-        .card-dashboard:hover {
-            transform: translateY(-5px);
-        }
-        .card-dashboard .card-body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 25px 15px;
-            text-align: center;
-        }
-        .card-dashboard h5 {
-            font-weight: 600;
-            color: #198754;
-            margin-top: 15px;
-            font-size: 1.1rem;
-        }
-        .card-dashboard p {
-            font-size: 0.95rem;
-            color: #555;
-            margin-top: 10px;
-        }
-        @media (max-width: 767px) {
-            .dashboard-header h2 {
-                font-size: 1.5rem;
-            }
-            .card-dashboard h5 {
-                font-size: 1rem;
-            }
-            .card-dashboard p {
-                font-size: 0.85rem;
-            }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRide - Accueil</title>
+    <link rel="stylesheet" href="assets/css/tableau_de_bord.css">
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+
 </head>
 <body>
+<!-- Inclure le menu -->
 <?php include __DIR__ . '/../partials/header.php'; ?>
 
-<div class="container dashboard-container">
+<section class="hero mb-5">
     <!-- En-tête avec photo -->
-    <div class="dashboard-header">
+
         <img src="<?= htmlspecialchars($photoPathWeb) ?>" alt="Photo de profil" class="user-photo" id="currentPhoto">
         <h2>Bonjour, <?= htmlspecialchars($userPseudo) ?> !</h2>
         <button type="button" class="btn btn-outline-success btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalPhoto">
             Changer ma photo
         </button>
         <a href="../utilisateurs/index.php?entity=accueil&action=logout" class="btn-logout mt-2 d-block">Se déconnecter</a>
-    </div>
+
+</section>
+<div class="container dashboard-container">
+   </div>
 
     <!-- Cartes dashboard -->
     <div class="row g-4">

@@ -64,6 +64,12 @@ class AvisController
 
         return $this->avisRepo->getNbAvisByUtilisateur($idUtilisateur);
 
-        require_once __DIR__ .'/../View/avis/liste_avis.php';
+
+    }
+
+    function showAvis(): void
+    {
+
+        require_once __DIR__ .'/../../View/utilisateurs/avis.php';
     }
 }
