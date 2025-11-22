@@ -38,7 +38,9 @@ class Covoiturage
     // ============================
     // VEHICULE
     // ============================
-    private ?array $vehicules = [];       // Tableau d'objets véhicules liés
+    private ?Vehicule $vehicule = null;
+
+    // Tableau d'objets véhicules liés
     private ?string $vehiculeNom = null;
     private ?string $vehiculeModele = null;
     private ?string $vehiculeEnergie =null;
@@ -195,8 +197,13 @@ class Covoiturage
     // ============================
     // GETTERS & SETTERS VEHICULE
     // ============================
-    public function getVehicules(): array { return $this->vehicules; }
-    public function setVehicules(array $vehicules): void { $this->vehicules = $vehicules; }
+    public function setVehicule(?Vehicule $vehicule): void {
+        $this->vehicule = $vehicule;
+    }
+
+    public function getVehicule(): ?Vehicule {
+        return $this->vehicule;
+    }
 
     public function getVehiculeNom(): ?string { return $this->vehiculeNom; }
     public function setVehiculeNom(?string $nom): void { $this->vehiculeNom = $nom; }

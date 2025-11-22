@@ -115,4 +115,17 @@ class VillesRepository
         $stmt = $this->conn->query("SELECT id_ville, nom_ville FROM villes ORDER BY nom_ville ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function searchVille(string $term): array {
+        $stmt = $this->conn->prepare("
+        SELECT nom_ville AS nom
+        FROM villes
+        WHERE nom_ville LIKE :term
+        ORDER BY nom_ville ASC
+        LIMIT 10
+    ");
+        $stmt->execute(['term' => $term . '%']);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }

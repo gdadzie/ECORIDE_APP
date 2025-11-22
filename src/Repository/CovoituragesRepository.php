@@ -5,6 +5,7 @@ namespace Repository;
 use Config\Database;
 use Entity\Marque;
 use Entity\Utilisateur;
+use Entity\Vehicule;
 use PDO;
 use PDOException;
 use Entity\Covoiturage;
@@ -54,61 +55,71 @@ class CovoituragesRepository
 
     private function hydrateCovoiturage(array $row): Covoiturage
     {
-
         $covoiturage = new Covoiturage();
-        $marque = new Marque();
 
+        // --- Infos basiques ---
+        $covoiturage->setIdCovoiturage((int)($row['id_covoiturage'] ?? 0));
+        $covoiturage->setIdUtilisateur((int)($row['id_utilisateur'] ?? 0));
+        $covoiturage->setVilleDepart($row['ville_depart'] ?? '');
+        $covoiturage->setVilleArrivee($row['ville_arrivee'] ?? '');
+        $covoiturage->setVilleDepartNom($row['ville_depart_nom'] ?? '');
+        $covoiturage->setVilleArriveeNom($row['ville_arrivee_nom'] ?? '');
 
-        $covoiturage->setIdCovoiturage($row['id_covoiturage']);
-        $covoiturage->setIdUtilisateur($row['id_utilisateur']);
+        // --- Date + heure ---
+        $covoiturage->setDateDepart($row['date_depart'] ?? '—');
+        $covoiturage->setHeureDepart($row['heure_depart'] ?? '00:00:00');
 
-        // ⭐ IMPORTANT : ID DU VÉHICULE + NOM VEHICULE ⭐
-        if (isset($row['id_vehicule'])) {
+        // Durée et heure d'arrivée
+        $dureeMinutes = isset($row['duree_minutes']) ? (int)$row['duree_minutes'] : 0;
+        $covoiturage->setDureeMinutes($dureeMinutes);
+        $covoiturage->setHeureArrivee($this->calculerHeureArrivee(
+            $covoiturage->getHeureDepart(),
+            $dureeMinutes
+        ));
 
-            $covoiturage->setIdVehicule((int)$row['id_vehicule']);
+        // Distance
+        $covoiturage->setDistanceKm(isset($row['distance_km']) ? (float)$row['distance_km'] : 0.0);
 
-        }
-
-        $covoiturage->setVilleDepart($row['ville_depart']);
-        $covoiturage->setVilleArrivee($row['ville_arrivee']);
-
-        // Date + heure
-        if (!empty($row['date_depart'])) {
-            $covoiturage->setDateDepart($row['date_depart']);
-        } else {
-            $covoiturage->setDateDepart('—');
-        }
-
-        $covoiturage->setHeureDepart($row['heure_depart']);
-
-        // Heure d’arrivée
-        $heureArrivee = $this->calculerHeureArrivee(
-            $row['heure_depart'] ?? null,
-            (int)($row['duree_minutes'] ?? 0)
-        );
-        $covoiturage->setHeureArrivee($heureArrivee);
-
-        // Places / prix
-        $covoiturage->setNbPlaces($row['nb_places']);
-        $covoiturage->setPrix($row['prix']);
-
-        // Noms des villes
-        $covoiturage->setVilleDepartNom($row['ville_depart_nom']);
-        $covoiturage->setVilleArriveeNom($row['ville_arrivee_nom']);
+        // --- Places / prix ---
+        $covoiturage->setNbPlaces(isset($row['nb_places']) ? (int)$row['nb_places'] : 0);
+        $covoiturage->setPrix(isset($row['prix']) ? (float)$row['prix'] : 0.0);
 
         // --- Conducteur ---
         $utilisateur = new Utilisateur();
-        $utilisateur->setIdUtilisateur($row['id_utilisateur']);
-        $utilisateur->setPseudo($row['pseudo']);
-        $utilisateur->setPhoto($row['photo']);
-        $utilisateur->setNote($row['note'] ?? null);
+        $utilisateur->setIdUtilisateur((int)($row['id_utilisateur'] ?? 0));
+        $utilisateur->setPseudo($row['pseudo'] ?? '');
+        $utilisateur->setPhoto($row['photo'] ?? '');
+        $utilisateur->setNote(isset($row['note_conducteur']) ? (float)$row['note_conducteur'] : null);
         $covoiturage->setConducteur($utilisateur);
 
-        // --- Véhicule : ne rien mettre ici ---
-        // Le véhicule sera chargé dans le contrôleur avec VehiculesRepository
+        // --- Véhicule (nom + modèle seulement) ---
+        if (!empty($row['id_vehicule'])) {
+            $vehicule = new Vehicule();
+
+            $vehicule->setIdVehicule((int)$row['id_vehicule']);
+            $vehicule->setIdUtilisateur((int)($row['id_utilisateur'] ?? 0));
+            $vehicule->setModele($row['vehicule_modele'] ?? '—');
+            $vehicule->setCouleur($row['couleur'] ?? '—');
+            $vehicule->setEnergie($row['energie'] ?? '—');
+            $vehicule->setImmatriculation($row['immatriculation'] ?? '—');
+            $vehicule->setDatePremiereImmatriculation($row['date_premiere_immatriculation'] ?? null);
+            $vehicule->setNbPlaces(isset($row['nb_places_vehicule']) ? (int)$row['nb_places_vehicule'] : null);
+
+            // Lier le véhicule au covoiturage
+            $covoiturage->setVehicule($vehicule);
+            $covoiturage->setIdVehicule((int)$row['id_vehicule']);
+
+            // Stocker directement le nom de la marque pour l'affichage
+            $covoiturage->setVehiculeNom($row['vehicule_marque'] ?? '—');
+        } else {
+            // Si aucun véhicule, on met des valeurs par défaut
+            $covoiturage->setVehiculeNom('—');
+            $covoiturage->setVehiculeModele('—');
+        }
 
         return $covoiturage;
     }
+
 
 
     // ────────────────────────────────
@@ -158,7 +169,7 @@ class CovoituragesRepository
     /**
      * Récupérer tous les covoiturages
      */
-    public function findAll(): array
+    public function findAll(): ?Covoiturage
     {
         try {
             $stmt = $this->conn->query("
@@ -360,15 +371,18 @@ class CovoituragesRepository
      * @param string|null $date Date de départ (format 'YYYY-MM-DD')
      * @return array
      */
-    /**
-     * Recherche flexible de covoiturages
-     * @param string|null $depart Ville de départ (partiel possible)
-     * @param string|null $arrivee Ville d'arrivée (partiel possible)
-     * @param string|null $date Date de départ (format 'YYYY-MM-DD')
-     * @return Entity\Covoiturage[]
-     */
+
     public function findCovoiturageByDepartArriveeDate(?string $depart, ?string $arrivee, ?string $date): array
     {
+        // Normalisation PHP identique à SQL (translittération ASCII)
+        $normalize = function ($str) {
+            $str = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $str));
+            return $str;
+        };
+
+        $departNorm = $depart ? $normalize($depart) : null;
+        $arriveeNorm = $arrivee ? $normalize($arrivee) : null;
+
         $sql = "
         SELECT 
             c.*,
@@ -379,8 +393,8 @@ class CovoituragesRepository
             vd.nom_ville AS ville_depart_nom,
             va.nom_ville AS ville_arrivee_nom,
             (SELECT AVG(note)
-             FROM avis
-             WHERE id_receveur = u.id_utilisateur
+                FROM avis
+                WHERE id_receveur = u.id_utilisateur
             ) AS note_conducteur
         FROM covoiturages c
         JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
@@ -393,14 +407,20 @@ class CovoituragesRepository
 
         $params = [];
 
-        if (!empty($depart)) {
-            $sql .= " AND vd.nom_ville LIKE :depart";
-            $params[':depart'] = "%$depart%";
+        // Normalisation SQL fiable (enlève TOUS les accents)
+        $sqlNormalizeDepart = "LOWER(CONVERT(vd.nom_ville USING ASCII))";
+        $sqlNormalizeArrivee = "LOWER(CONVERT(va.nom_ville USING ASCII))";
+
+        if (!empty($departNorm)) {
+            $sql .= " AND $sqlNormalizeDepart LIKE :depart";
+            $params[':depart'] = '%' . $departNorm . '%';
         }
-        if (!empty($arrivee)) {
-            $sql .= " AND va.nom_ville LIKE :arrivee";
-            $params[':arrivee'] = "%$arrivee%";
+
+        if (!empty($arriveeNorm)) {
+            $sql .= " AND $sqlNormalizeArrivee LIKE :arrivee";
+            $params[':arrivee'] = '%' . $arriveeNorm . '%';
         }
+
         if (!empty($date)) {
             $sql .= " AND c.date_depart = :date";
             $params[':date'] = $date;
@@ -413,19 +433,17 @@ class CovoituragesRepository
         }
 
         $stmt->execute();
+
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $covoits = [];
+        $resultats = [];
         foreach ($rows as $row) {
-            // Hydrate l'objet Covoiturage
-            $covoiturage = $this->hydrateCovoiturage($row);
-
-            // Ne pas formater la date ici, garder la date brute SQL (YYYY-MM-DD)
-            $covoits[] = $covoiturage;
+            $resultats[] = $this->hydrateCovoiturage($row);
         }
 
-        return $covoits;
+        return $resultats;
     }
+
 
     // ────────────────────────────────
     // 🔹 Méthodes utilisateur spécifiques
@@ -437,22 +455,28 @@ class CovoituragesRepository
     public function getCovoituragesByUtilisateur(int $userId): array
     {
         $sql = "
-            SELECT c.*,
-                   u.pseudo,
-                   u.photo,
-                   vd.nom_ville AS ville_depart_nom,
-                   va.nom_ville AS ville_arrivee_nom,
-                   (
-                       SELECT AVG(note)
-                       FROM avis
-                       WHERE id_receveur = u.id_utilisateur
-                   ) AS note_conducteur
-            FROM covoiturages c
-            JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
-            JOIN villes vd ON c.ville_depart = vd.id_ville
-            JOIN villes va ON c.ville_arrivee = va.id_ville
-            WHERE c.id_utilisateur = :userId
-        ";
+        SELECT 
+            c.*,
+            u.pseudo,
+            u.photo,
+            v.modele AS vehicule_modele,
+            m.nom_marque AS vehicule_marque,
+            vd.nom_ville AS ville_depart_nom,
+            va.nom_ville AS ville_arrivee_nom,
+            (
+                SELECT AVG(note)
+                FROM avis
+                WHERE id_receveur = u.id_utilisateur
+            ) AS note_conducteur
+        FROM covoiturages c
+        JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
+        LEFT JOIN vehicules v ON v.id_vehicule = c.id_vehicule
+        LEFT JOIN marques m ON m.id_marque = v.id_marque
+        JOIN villes vd ON c.ville_depart = vd.id_ville
+        JOIN villes va ON c.ville_arrivee = va.id_ville
+        WHERE c.id_utilisateur = :userId
+        ORDER BY c.date_depart ASC, c.heure_depart ASC
+    ";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
@@ -460,6 +484,7 @@ class CovoituragesRepository
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $covoits = [];
+
         foreach ($rows as $row) {
             $covoits[] = $this->hydrateCovoiturage($row);
         }

@@ -48,64 +48,69 @@ function formatDateFR($dateStr) {
             $dureeMinutes = $covoiturage->getDureeMinutes() ?? 0;
             ?>
             <div class="col-md-6 col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <!-- Date -->
-                    <div class="card-header text-center text-muted bg-light">
-                        <?= htmlspecialchars($affichageDateLong) ?>
-                    </div>
+                <div class="card shadow-sm h-100 border-0 rounded-3 hover-card">
+                    <div class="card-body d-flex flex-column">
 
-                    <!-- Conducteur -->
-                    <div class="card-body">
+                        <!-- Conducteur & Note -->
                         <div class="d-flex align-items-center mb-3 gap-3">
                             <?php if (!empty($avatar)): ?>
-                                <img src="<?= htmlspecialchars($avatar) ?>" class="rounded-circle" width="50" height="50">
+                                <img src="<?= htmlspecialchars($avatar) ?>"
+                                     class="rounded-circle" width="50" height="50">
                             <?php else: ?>
                                 <div class="rounded-circle bg-success-subtle d-flex align-items-center justify-content-center text-dark"
                                      style="width:50px; height:50px; font-weight:600;">
                                     <?= htmlspecialchars($initial) ?>
                                 </div>
                             <?php endif; ?>
+
                             <div>
-                                <div class="fw-bold"><?= htmlspecialchars($covoiturage->getConducteur()->getPseudo() ?? '') ?>
+                                <h6 class="mb-1">
+                                    <?= htmlspecialchars($covoiturage->getConducteur()->getPseudo() ?? 'Conducteur') ?>
                                     <?php if ($ecologique): ?>
                                         <span class="badge bg-success-subtle text-success">Éco</span>
                                     <?php endif; ?>
-                                </div>
-                                <div class="text-muted small">
+                                </h6>
+
+                                <small class="text-muted">
                                     <?php for ($i=1; $i<=5; $i++): ?>
                                         <i class="bi <?= $i <= floor($note) ? 'bi-star-fill text-warning' : 'bi-star text-muted' ?>"></i>
                                     <?php endfor; ?>
-                                </div>
+                                    <?= number_format($note,1) ?>
+                                </small>
                             </div>
                         </div>
 
                         <!-- Trajet -->
-                        <div class="mb-3">
-                            <p class="mb-1"><i class="bi bi-arrow-up-right me-2 text-success"></i> <?= htmlspecialchars($villeDepart) ?> <span class="badge bg-success-subtle text-success">Départ</span></p>
-                            <p class="mb-1"><i class="bi bi-arrow-down-left me-2 text-danger"></i> <?= htmlspecialchars($villeArrivee) ?> <span class="badge bg-danger-subtle text-danger">Arrivée</span></p>
-                        </div>
+                        <h5 class="mb-2">
+                            <i class="bi bi-geo-alt-fill text-success me-1"></i>
+                            <?= htmlspecialchars($villeDepart) ?>
+                            <span class="mx-1">→</span>
+                            <?= htmlspecialchars($villeArrivee) ?>
+                        </h5>
 
-                        <!-- Infos supplémentaires -->
-                        <div class="d-flex flex-wrap gap-2 fs-7 mb-3">
-                            <div class="badge bg-light text-dark"><i class="bi bi-clock me-1"></i> <?= htmlspecialchars($covoiturage->getHeureDepart() ?? '') ?></div>
-                            <div class="badge bg-light text-dark"><i class="bi bi-stopwatch me-1"></i> <?= htmlspecialchars($heureArrivee) ?></div>
-                            <div class="badge bg-light text-dark"><i class="bi bi-people-fill me-1"></i> <?= htmlspecialchars($nbPlaces) ?> places</div>
-                            <div class="badge bg-light text-dark"><i class="bi bi-currency-euro me-1"></i> <?= htmlspecialchars($prix) ?></div>
-                            <div class="badge bg-light text-dark"><i class="bi bi-signpost-split me-1"></i> <?= htmlspecialchars($distanceKm) ?> km</div>
-                            <div class="badge bg-light text-dark"><i class="bi bi-hourglass-split me-1"></i> <?= htmlspecialchars($dureeMinutes) ?> min</div>
-                        </div>
+                        <!-- Informations -->
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="bi bi-calendar3 text-success me-2"></i> <?= htmlspecialchars($affichageDateLong) ?></li>
+                            <li><i class="bi bi-clock text-success me-2"></i> Départ : <?= htmlspecialchars($covoiturage->getHeureDepart() ?? '—') ?></li>
+                            <li><i class="bi bi-clock-history text-success me-2"></i> Arrivée : <?= htmlspecialchars($heureArrivee) ?></li>
+                            <li><i class="bi bi-people-fill text-success me-2"></i> Places : <?= htmlspecialchars($nbPlaces) ?></li>
+                            <li><i class="bi bi-currency-euro text-success me-2"></i> Prix : <?= htmlspecialchars($prix) ?> €</li>
+                            <li><i class="bi bi-signpost-split text-success me-2"></i> Distance : <?= htmlspecialchars($distanceKm) ?> km</li>
+                            <li><i class="bi bi-hourglass-split text-success me-2"></i> Durée : <?= htmlspecialchars($dureeMinutes) ?> min</li>
+                        </ul>
 
-                        <!-- Bouton Détails -->
-                        <div class="d-flex justify-content-end">
+                        <!-- Action -->
+                        <div class="mt-auto d-flex justify-content-end">
                             <a href="index.php?entity=covoiturages&action=detail_covoiturage&id=<?= htmlspecialchars($covoiturage->getIdCovoiturage()) ?>"
                                class="btn btn-outline-success btn-sm">
                                 <i class="bi bi-eye me-1"></i> Détails
                             </a>
-
                         </div>
+
                     </div>
                 </div>
             </div>
+
         <?php endforeach; ?>
     </div>
 </div>

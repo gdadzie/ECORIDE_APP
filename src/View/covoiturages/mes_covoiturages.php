@@ -16,6 +16,8 @@
     <!-- CSS perso -->
     <link rel="stylesheet" href="/assets/css/covoiturage/card_covoiturage.css">
     <link rel="stylesheet" href="/assets/css/header/dashboard_header_mes_covoiturages.css">
+    <link rel="stylesheet" href="/assets/css/covoiturage/mes_covoiturages.css">
+
 
     <script src="/assets/js/bootstrap/bootstrap.js" defer></script>
 </head>
@@ -83,7 +85,7 @@
                                 <li><i class="bi bi-people-fill text-success me-2"></i> Places : <?= htmlspecialchars($c->getNbPlaces() ?? 0) ?></li>
                                 <li><i class="bi bi-currency-euro text-success me-2"></i> Prix : <?= htmlspecialchars($c->getPrix() ?? 0) ?> €</li>
                                 <li><i class="bi bi-hourglass-split text-success me-2"></i> Durée : <?= htmlspecialchars($c->getDureeMinutes() ?? 0) ?> min</li>
-                                <li><i class="bi bi-car-front-fill text-success me-2"></i> Véhicule : <?= htmlspecialchars($c->getVehiculeNom() ?? '—') ?> - <?= htmlspecialchars($c->getVehiculeModele() ?? '—') ?></li>
+                                <li><i class="bi bi-car-front-fill text-success me-2"></i> Véhicule :  <?= $c->getVehiculeNom(); ?> - <?= htmlspecialchars($c->getVehiculeModele() ?? '—') ?></li>
                                 <li><i class="bi bi-info-circle-fill text-success me-2"></i> Statut : <?= htmlspecialchars($c->getStatut() ?? '—') ?></li>
                             </ul>
 
@@ -116,17 +118,7 @@
     </div>
 </div>
 
-<style>
-    .hover-card:hover {
-        transform: translateY(-4px);
-        transition: all 0.3s ease;
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-    }
-    ul.list-unstyled li i {
-        width: 20px;
-        display: inline-block;
-    }
-</style>
+
 
 </body>
 </html>

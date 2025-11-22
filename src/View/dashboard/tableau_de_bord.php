@@ -1,50 +1,129 @@
-<?php
-$photoPathWeb = $photoPathWeb ?? '/uploads/photos/default-avatar.jpg';
-$userPseudo   = $userPseudo ?? 'Utilisateur';
-$userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
-?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoRide - Accueil</title>
-    <link rel="stylesheet" href="assets/css/tableau_de_bord.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoRide - Tableau de bord</title>
 
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
 
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f4f7f4;
+            color: #2f3e2f;
+        }
 
+        .hero {
+            text-align: center;
+            padding: 50px 20px;
+            background: linear-gradient(135deg, #1c7c2c, #43b258);
+            color: white;
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .hero .user-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .card-dashboard {
+            border: none;
+            border-radius: 18px;
+            padding: 10px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all .25s;
+        }
+
+        .card-dashboard:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        }
+
+        .card-dashboard h5 {
+            font-weight: 600;
+            color: #1c7c2c;
+        }
+
+        .btn-success {
+            background-color: #1c7c2c;
+            border-color: #1c7c2c;
+        }
+        .btn-success:hover {
+            background-color: #155e22;
+            border-color: #155e22;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: .25s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* Animation apparition */
+        .fade-in {
+            animation: fadeIn .8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 20px;
+        }
+
+        .modal-header, .modal-footer {
+            border: none;
+        }
+    </style>
 </head>
 <body>
-<!-- Inclure le menu -->
-<?php include __DIR__ . '/../partials/header.php'; ?>
 
-<section class="hero mb-5">
-    <!-- En-tête avec photo -->
 
-        <img src="<?= htmlspecialchars($photoPathWeb) ?>" alt="Photo de profil" class="user-photo" id="currentPhoto">
-        <h2>Bonjour, <?= htmlspecialchars($userPseudo) ?> !</h2>
-        <button type="button" class="btn btn-outline-success btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalPhoto">
-            Changer ma photo
-        </button>
-        <a href="../utilisateurs/index.php?entity=accueil&action=logout" class="btn-logout mt-2 d-block">Se déconnecter</a>
+<section class="hero mb-5 fade-in">
+    <img src="<?= htmlspecialchars($photoPathWeb) ?>" alt="Photo de profil" class="user-photo" id="currentPhoto" />
+    <h2 class="mt-3">Bonjour, <?= htmlspecialchars($userPseudo) ?> !</h2>
 
+    <button type="button" class="btn btn-outline-light btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalPhoto">
+        <i class="bi bi-camera"></i> Changer ma photo
+    </button>
+
+    <a href="index.php?entity=utilisateurs&action=deconnexion" class="btn-logout mt-3 d-inline-block">
+        <i class="bi bi-box-arrow-right"></i> Se déconnecter
+    </a>
 </section>
-<div class="container dashboard-container">
-   </div>
 
-    <!-- Cartes dashboard -->
-    <div class="row g-4">
+<div class="container pb-5">
+    <div class="row g-4 fade-in">
+
         <?php if ((int)$userRole === 2): ?>
             <div class="col-12 col-sm-6 col-md-4">
-                <div class="card card-dashboard">
+                <div class="card card-dashboard h-100">
                     <div class="card-body">
-                        <h5>Liste des utilisateurs</h5>
+                        <h5><i class="bi bi-people"></i> Liste des utilisateurs</h5>
                         <p>Consultez tous les utilisateurs, modifiez ou supprimez-les si nécessaire.</p>
                         <a href="../utilisateurs/index.php?entity=utilisateurs&action=liste_utilisateurs" class="btn btn-success">Accéder</a>
                     </div>
@@ -53,9 +132,9 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
         <?php endif; ?>
 
         <div class="col-12 col-sm-6 col-md-4">
-            <div class="card card-dashboard">
+            <div class="card card-dashboard h-100">
                 <div class="card-body">
-                    <h5>Créer un covoiturage</h5>
+                    <h5><i class="bi bi-plus-circle"></i> Créer un covoiturage</h5>
                     <p>Planifiez un nouveau covoiturage et renseignez les trajets et horaires.</p>
                     <a href="index.php?entity=covoiturages&action=creer_covoiturage" class="btn btn-success">Créer</a>
                 </div>
@@ -63,42 +142,39 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
         </div>
 
         <div class="col-12 col-sm-6 col-md-4">
-            <div class="card card-dashboard">
+            <div class="card card-dashboard h-100">
                 <div class="card-body">
-                    <h5>Rechercher un covoiturage</h5>
+                    <h5><i class="bi bi-search"></i> Rechercher un covoiturage</h5>
                     <p>Trouvez un covoiturage correspondant à vos besoins et réservez votre place.</p>
                     <a href="index.php?entity=accueil&action=covoiturages" class="btn btn-success">Rechercher</a>
                 </div>
             </div>
         </div>
 
-        <!-- Mes covoiturages -->
         <div class="col-12 col-sm-6 col-md-4">
-            <div class="card card-dashboard">
+            <div class="card card-dashboard h-100">
                 <div class="card-body">
-                    <h5>Mes covoiturages</h5>
+                    <h5><i class="bi bi-car-front"></i> Mes covoiturages</h5>
                     <p>Consultez et gérez tous vos covoiturages personnels.</p>
                     <a href="index.php?entity=covoiturages&action=mes_covoiturages" class="btn btn-success">Voir mes covoiturages</a>
                 </div>
             </div>
         </div>
 
-        <!-- Mes véhicules -->
         <div class="col-12 col-sm-6 col-md-4">
-            <div class="card card-dashboard">
+            <div class="card card-dashboard h-100">
                 <div class="card-body">
-                    <h5>Mes véhicules</h5>
+                    <h5><i class="bi bi-truck"></i> Mes véhicules</h5>
                     <p>Consultez vos véhicules et ajoutez-en de nouveaux si nécessaire.</p>
                     <a href="index.php?entity=vehicules&action=liste_vehicules" class="btn btn-success">Voir mes véhicules</a>
                 </div>
             </div>
         </div>
 
-        <!-- Messagerie -->
         <div class="col-12 col-sm-6 col-md-4">
-            <div class="card card-dashboard">
+            <div class="card card-dashboard h-100">
                 <div class="card-body">
-                    <h5>Messagerie</h5>
+                    <h5><i class="bi bi-chat-dots"></i> Messagerie</h5>
                     <p>Échangez avec les conducteurs, l’administrateur ou d’autres utilisateurs.</p>
                     <a href="../utilisateurs/index.php?entity=messagerie&action=inbox" class="btn btn-success">Accéder à la messagerie</a>
                 </div>
@@ -106,32 +182,31 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
         </div>
 
         <div class="col-12 col-sm-6 col-md-4">
-            <div class="card card-dashboard">
+            <div class="card card-dashboard h-100">
                 <div class="card-body">
-                    <h5>Mon profil</h5>
+                    <h5><i class="bi bi-person"></i> Mon profil</h5>
                     <p>Consultez et mettez à jour vos informations personnelles et préférences.</p>
                     <a href="../utilisateurs/index.php?entity=utilisateurs&action=mon_profil" class="btn btn-success">Accéder</a>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
 <!-- Modal changement photo -->
-<div class="modal fade" id="modalPhoto" tabindex="-1" aria-labelledby="modalPhotoLabel" aria-hidden="true">
+<div class="modal fade" id="modalPhoto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form id="formPhoto" action="../utilisateurs/index.php?entity=utilisateurs&action=mise_a_jour_profil" method="POST" enctype="multipart/form-data">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalPhotoLabel">Changer ma photo de profil</h5>
+                    <h5 class="modal-title">Changer ma photo de profil</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <div class="mb-3">
-                        <img id="previewPhoto" src="<?= htmlspecialchars($photoPathWeb) ?>" class="user-photo mb-3" style="max-width:120px; max-height:120px;">
-                        <input class="form-control" type="file" id="photo" name="photo" accept="image/*">
-                    </div>
-                    <small class="text-muted">Taille max 2 Mo. Formats : JPG, PNG, GIF.</small>
+                    <img id="previewPhoto" src="<?= htmlspecialchars($photoPathWeb) ?>" class="user-photo mb-3" style="max-width:120px; max-height:120px;" />
+                    <input class="form-control" type="file" id="photo" name="photo" accept="image/*" />
+                    <small class="text-muted">Taille max 2 Mo • Formats : JPG, PNG, GIF</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -141,8 +216,9 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/main.js"></script>
+
 <script>
     const inputPhoto = document.getElementById('photo');
     const previewPhoto = document.getElementById('previewPhoto');
@@ -156,8 +232,7 @@ $userRole     = $userRole ?? 0; // ou 'user' selon ton système de rôles
         reader.readAsDataURL(file);
     });
 
-    const form = document.getElementById('formPhoto');
-    form.addEventListener('submit', () => {
+    document.getElementById('formPhoto').addEventListener('submit', () => {
         currentPhoto.src = previewPhoto.src;
     });
 </script>

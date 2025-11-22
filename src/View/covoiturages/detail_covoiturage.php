@@ -110,7 +110,7 @@
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="text-muted small">Aucun avis reçu.</div>
+                      <a href="index.php?entity=avis&action=avis"><div class="text-muted small">Aucun avis reçu.</div></a>
                     <?php endif; ?>
                 </div>
 

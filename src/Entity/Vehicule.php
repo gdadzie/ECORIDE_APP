@@ -13,6 +13,7 @@ class Vehicule
     private ?string $immatriculation;
     private ?string $date_premiere_immatriculation;
     private ?int $nb_places;
+    private ?Marque $marque = null;
 
     public function __construct(
         ?int $id_utilisateur = null,
@@ -50,12 +51,22 @@ class Vehicule
     // SETTERS
     public function setIdVehicule(int $id_vehicule): void { $this->id_vehicule = $id_vehicule; }
     public function setIdUtilisateur(int $id_utilisateur): void { $this->id_utilisateur = $id_utilisateur; }
-    public function setIdMarque(int $id_marque): void { $this->id_marque = $id_marque; }
-    public function setNomMarque(string $nom_marque): void { $this->nom_marque = $nom_marque; }
-    public function setModele(string $modele): void { $this->modele = $modele; }
-    public function setCouleur(string $couleur): void { $this->couleur = $couleur; }
-    public function setEnergie(string $energie): void { $this->energie = $energie; }
-    public function setImmatriculation(string $immatriculation): void { $this->immatriculation = $immatriculation; }
-    public function setDatePremiereImmatriculation(string $date): void { $this->date_premiere_immatriculation = $date; }
-    public function setNbPlaces(int $nb_places): void { $this->nb_places = $nb_places; }
+    public function setIdMarque(?int $id_marque): void { $this->id_marque = $id_marque; }
+    public function setNomMarque(?string $nom_marque): void { $this->nom_marque = $nom_marque; }
+    public function setModele(?string $modele): void { $this->modele = $modele; }
+    public function setCouleur(?string $couleur): void { $this->couleur = $couleur; }
+    public function setEnergie(?string $energie): void { $this->energie = $energie; }
+    public function setImmatriculation(?string $immatriculation): void { $this->immatriculation = $immatriculation; }
+    public function setDatePremiereImmatriculation(?string $date): void { $this->date_premiere_immatriculation = $date; }
+    public function setNbPlaces(?int $nb_places): void { $this->nb_places = $nb_places; }
+
+    public function getMarque(): ?Marque
+    {
+        return $this->marque;
+    }
+
+    public function setMarque(?Marque $marque): void
+    {
+        $this->marque = $marque;
+    }
 }

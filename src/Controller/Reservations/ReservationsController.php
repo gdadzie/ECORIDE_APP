@@ -2,31 +2,69 @@
 namespace Controller\Reservations;
 
 use Controller\Credits\CreditsController;
-use Controller\Covoiturages\CovoituragesController;
+use Controller\Covoiturages\CovoituragesDisplayController;
+use Repository\AvisRepository;
+use Repository\CreditsRepository;
+use Repository\MarquesRepository;
 use Repository\ReservationRepository;
+use Repository\CovoituragesRepository;
+
 use Entity\Reservation;
 use Entity\Utilisateur;
 use Entity\Covoiturage;
+use Repository\UtilisateursRepository;
+use Repository\VehiculesRepository;
+use Service\CreditsService;
+use Service\ReservationService;
 
 class ReservationsController
 {
     private CreditsController $creditsController;
     private ReservationRepository $reservationsRepo;
-    private CovoituragesController $covoituragesController;
+    private CovoituragesDisplayController $covoituragesDisplayController;
 
-    public function __construct(\PDO $conn, $reservationsRepo, $covoituragesController)
+    public function __construct(\PDO $conn, $reservationsRepo, $covoituragesDisplayController)
     {
-        $this->creditsController = new \Controller\Credits\CreditsController($conn);
-        $this->reservationsRepo = $reservationsRepo;
-        $this->covoituragesController = $covoituragesController;
-    }
+        // Instanciation des repositories
+        $covoituragesRepo   = new CovoituragesRepository($conn);
+        $utilisateursRepo   = new UtilisateursRepository($conn);
+        $avisRepo           = new AvisRepository($conn);
+        $creditsRepo        = new CreditsRepository($conn);
+        $vehiculesRepo      = new VehiculesRepository($conn);
+        $reservationsRepo   = new ReservationRepository($conn);
+        $marquesRepo        = new MarquesRepository($conn);
 
+        // Instanciation des services
+        $creditsService     = new CreditsService($creditsRepo);
+        $reservationService = new ReservationService($reservationsRepo);
+
+        // Instanciation du contrôleur
+        $this->covoituragesDisplayController = new CovoituragesDisplayController(
+            $covoituragesRepo,
+            $utilisateursRepo,
+            $avisRepo,
+            $creditsService,
+            $reservationService,
+            $reservationsRepo,
+            $vehiculesRepo,
+            $marquesRepo,
+        );
+
+        $this->reservationsRepo = $reservationsRepo;
+
+        // CreditsController existant
+        $this->creditsController = new CreditsController($conn);
+    }
     public function reserver(Utilisateur $user, Covoiturage $covoiturage): void
     {
         if (!$user) {
-            header('Location: /login.php');
+            // Enregistre la page actuelle pour y revenir après login
+            session_start();
+            $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'];
+            header('Location: index.php?entity=accueil&action=connexion');
             exit;
         }
+
 
         if (!$covoiturage) {
             echo "Covoiturage introuvable.";
@@ -58,7 +96,7 @@ class ReservationsController
                         $this->creditsController->updateCredits($user, $creditsUser - $coutCredits);
 
                         // Décrémenter places
-                        $this->covoituragesController->updatePlacesAndStatut(
+                        $this->covoituragesDisplayController->updatePlacesAndStatut(
                             $covoiturage,
                             $nbPlacesRestantes - 1,
                             'en cours'

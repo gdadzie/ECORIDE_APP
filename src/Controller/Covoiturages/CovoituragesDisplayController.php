@@ -56,20 +56,7 @@ class CovoituragesDisplayController
         $this->marquesRepo        = $marquesRepo;
     }
 
-    // 🔍 Affichage des résultats d’une recherche de covoiturages
-    public function resultatsRecherche(): void
-    {
-        // On récupère les filtres depuis l'URL
-        $depart = $_GET['depart'] ?? null;
-        $arrivee = $_GET['arrivee'] ?? null;
-        $date = $_GET['date'] ?? null;
 
-        // On récupère les covoiturages correspondants
-        $covoiturages = $this->covoituragesRepo->findCovoiturageByDepartArriveeDate($depart, $arrivee, $date);
-
-        // Ensuite on affiche la vue avec les résultats
-        require __DIR__ . '/../../View/accueil/resultats_recherches_covoiturages.php';
-    }
 
     /**
      * Affiche les détails d’un covoiturage et gère la réservation
@@ -84,165 +71,176 @@ class CovoituragesDisplayController
     public function showDetails(): void
     {
         // ────────────────────────────────
-        // 1️⃣ Récupération de l'ID du covoiturage depuis l'URL
+        // 1️⃣ Récupération de l'ID du covoiturage
         // ────────────────────────────────
         $id = intval($_GET['id'] ?? 0);
 
-        // Initialisation des variables pour la vue
-        $covoiturage = null;
+        // Valeurs par défaut pour la vue
         $errorMessage = '';
         $successMessage = '';
         $confirmNeeded = false;
-        $avatarConducteur = $pseudoConducteur = $affichageDate = $heureDepart = $heureArrivee = '-';
-        $duree = $distance = $prix = $nbPlaces = 0;
-        $vehiculeNom = $vehiculeModele = $vehiculeEnergie = '-';
-        $ecologique = false;
+
+        //VEHICULES
+        $vehiculeNom = '-';
+        $vehiculeModele = '-';
+        $vehiculeEnergie = '-';
+
+        //VILLES
+        $villeDepart = '-';
+        $villeArrivee = '-';
+
+        //COVOITURAGES
+        $affichageDate = '-';
+        $heureDepart = '-';
+        $heureArrivee = '-';
+        $duree = 0;
+        $distance = 0;
+        $prix = 0;
+        $nbPlaces = 0;
         $preferences = ['fumeur' => false, 'animaux' => false];
+        $ecologique = false;
+
+        //CONDUCTEUR
+        $pseudoConducteur = '-';
+        $avatarConducteur = 'assets/img/default-avatar.png';
+        $noteUtilisateur = 0;
+
 
         // ────────────────────────────────
         // 2️⃣ Vérification ID
         // ────────────────────────────────
         if (!$id) {
             $errorMessage = "Covoiturage introuvable.";
-        } else {
-            // ────────────────────────────────
-            // 3️⃣ Récupération du covoiturage
-            // ────────────────────────────────
-            $covoiturage = $this->covoituragesRepo->findById($id);
+            require __DIR__ . '/../../View/covoiturages/detail_covoiturage.php';
+            return;
+        }
 
-            if (!$covoiturage) {
-                $errorMessage = "Covoiturage introuvable.";
+
+        // ────────────────────────────────
+        // 3️⃣ Récupération du covoiturage
+        // ────────────────────────────────
+        $covoiturage = $this->covoituragesRepo->findById($id);
+
+        if (!$covoiturage) {
+            $errorMessage = "Covoiturage introuvable.";
+            require __DIR__ . '/../../View/covoiturages/detail_covoiturage.php';
+            return;
+        }
+
+
+        // ────────────────────────────────
+        // 4️⃣ Hydratation des infos trajets
+        // ────────────────────────────────
+        $villeDepart   = $covoiturage->getVilleDepartNom()      ?? '-';
+        $villeArrivee  = $covoiturage->getVilleArriveeNom()     ?? '-';
+
+        $affichageDate = $covoiturage->getDateDepartFormatee()  ?? '-';
+        $heureDepart   = $covoiturage->getHeureDepart()         ?? '-';
+        $heureArrivee  = $covoiturage->getHeureArrivee()        ?? '-';
+
+        $duree     = $covoiturage->getDureeMinutes()            ?? 0;
+        $distance  = $covoiturage->getDistanceKm()              ?? 0;
+        $prix      = $covoiturage->getPrix()                    ?? 0;
+        $nbPlaces  = $covoiturage->getNbPlaces()                ?? 0;
+
+        $ecologique = $covoiturage->isEcologique();
+        $preferences = [
+            'fumeur'  => $covoiturage->getFumeur() ?? false,
+            'animaux' => $covoiturage->getAnimaux() ?? false,
+        ];
+
+
+        // ────────────────────────────────
+        // 5️⃣ Informations véhicule
+        // ────────────────────────────────
+        $idVehicule = $covoiturage->getIdVehicule();
+        $vehicule   = $idVehicule ? $this->vehiculesRepo->getEntityById($idVehicule) : null;
+
+        $idMarque = $vehicule?->getIdMarque();
+        $marque = $idMarque ? $this->marquesRepo->find($idMarque): null;
+
+
+
+        if ($vehicule) {
+            $vehiculeModele = $vehicule->getModele() ?? '-';
+
+            // Récupération marque
+
+            $vehiculeNom = $marque?->getNomMarque() ?? '-';
+
+
+
+        }
+
+        // Énergie
+        $vehiculeEnergie = $covoiturage->getVehiculeEnergie() ?? '-';
+
+
+        // ────────────────────────────────
+        // 6️⃣ Informations conducteur
+        // ────────────────────────────────
+        $idConducteur = $covoiturage->getIdUtilisateur();
+        $conducteur   = $this->utilisateursRepo->findById($idConducteur);
+
+        if ($conducteur) {
+            $pseudoConducteur = $conducteur->getPseudo();
+            $avatarConducteur = $conducteur->getPhoto();
+            $noteUtilisateur  = $conducteur->getNote();
+        }
+
+
+        // ────────────────────────────────
+        // 7️⃣ Utilisateur connecté et gestion participation
+        // ────────────────────────────────
+        $userConnecte = $_SESSION['user'] ?? null;
+        $creditsUser  = $userConnecte ? $this->creditsService->getCredits($userConnecte) : 0;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['participer'])) {
+
+            if (!$userConnecte) {
+                header('Location: index.php?entity=accueil&action=connexion');
+                exit;
+            }
+
+            $nbPlacesRestantes = $nbPlaces;
+            $coutCredits = $prix;
+
+            if ($creditsUser < $coutCredits) {
+                $errorMessage = "Crédits insuffisants pour réserver ce covoiturage.";
+            } elseif ($nbPlacesRestantes <= 0) {
+                $errorMessage = "Plus de place disponible.";
             } else {
-                // Assurer noms de villes
-                $covoiturage->setVilleDepartNom($covoiturage->getVilleDepartNom() ?? '-');
-                $covoiturage->setVilleArriveeNom($covoiturage->getVilleArriveeNom() ?? '-');
+                if (isset($_POST['confirm']) && $_POST['confirm'] === 'oui') {
 
-                //Assurer la date
-                $covoiturage->getDateDepartFormatee();
+                    // Débit des crédits
+                    $this->creditsService->updateCredits($userConnecte, $creditsUser - $coutCredits);
 
-                //Assurer heure depart - heure arrivee
-                $heureDepart = $covoiturage->getHeureDepart() ?? '-';
-                $heureArrivee = $covoiturage->getHeureArrivee() ?? '-';
+                    // Mise à jour des places
+                    $this->covoituragesRepo->updatePlacesAndStatut(
+                        $covoiturage->getIdCovoiturage(),
+                        $nbPlacesRestantes - 1,
+                        'en cours'
+                    );
 
-                //Affichage badge ecologique + Date départ Covoiturage
-                $ecologique = $covoiturage->isEcologique();
-                $affichageDate = $covoiturage->getDateDepartFormatee() ?? '-';
+                    // Enregistrement réservation
+                    $this->reservationService->createReservation($userConnecte, $covoiturage, $coutCredits);
 
-                $duree = $covoiturage->getDureeMinutes() ?? 0;
-                $distance = $covoiturage->getDistanceKm() ?? 0;
+                    $successMessage = "Votre réservation a été confirmée !";
+                    $nbPlacesRestantes--;
 
-                // Récupérer le covoiturage
-                $covoiturage = $this->covoituragesRepo->findById($id);
-                if (!$covoiturage) {
-                    // Si le covoiturage n'existe pas, rediriger ou afficher un message
-                    echo "Covoiturage non trouvé.";
-                    return;
-                }
-
-                // 1. Récupérer le covoiturage
-                $covoiturage = $this->covoituragesRepo->findById($id);
-                if (!$covoiturage) {
-                    echo "Covoiturage introuvable.";
-                    return;
-                }
-
-                // 2. Récupérer le véhicule associé à ce covoiturage
-                $vehiculeId = $covoiturage->getIdVehicule();
-                $vehicule = $vehiculeId ? $this->vehiculesRepo->getEntityById($vehiculeId) : null;
-
-                // 3. Récupérer la marque du véhicule
-                $idMarque = $vehicule?->getIdMarque();
-                $marque = $idMarque ? $this->marquesRepo->find($idMarque) : null;
-
-                // 4. Préparer les valeurs pour la vue
-                $vehiculeNom = $marque?->getNomMarque() ?? '-';
-                $vehiculeModele = $vehicule?->getModele() ?? '-';
-                $vehiculeEnergie = $covoiturage?->getVehiculeEnergie() ?? '-';
-
-                require __DIR__ . '/../../View/covoiturages/detail_covoiturage.php';
-
-
-                // Préparer les données à afficher
-                $vehiculeNom = $marque?->getNomMarque() ?? '-';
-                $vehiculeModele = $vehicule?->getModele() ?? '-';
-                $vehiculeEnergie = $covoiturage?->getVehiculeEnergie() ?? '-';
-
-                $preferences = [
-                    'fumeur' => $covoiturage->getFumeur() ?? false,
-                    'animaux' => $covoiturage->getAnimaux() ?? false,
-                ];
-                $prix = $covoiturage->getPrix() ?? 0;
-                $nbPlaces = $covoiturage->getNbPlaces() ?? 0;
-                $statut = $covoiturage->getStatut();
-
-                // ────────────────────────────────
-                // Hydratation du conducteur
-                // ────────────────────────────────
-
-                // ID du conducteur (stocké dans le covoiturage)
-                $idConducteur = $covoiturage->getIdUtilisateur();
-
-                // On récupère le conducteur dans la BDD
-                $conducteur = $this->utilisateursRepo->findById($idConducteur);
-
-                if (!$conducteur) {
-                    // Sécurité : au cas où l’utilisateur n’existe plus
-                    $pseudoConducteur = 'Inconnu';
-                    $avatarConducteur = 'assets/img/default-avatar.png';
                 } else {
-                    $pseudoConducteur = $conducteur->getPseudo();
-                    $avatarConducteur = $conducteur->getPhoto();
-                    $noteUtilisateur = $conducteur->getNote();
-
+                    $confirmNeeded = true;
                 }
-
-                // ────────────────────────────────
-                // 5️⃣ Infos utilisateur connecté
-                // ────────────────────────────────
-                $userConnecte = $_SESSION['user'] ?? null;
-                $creditsUser = $userConnecte ? $this->creditsService->getCredits($userConnecte) : 0;
-
-                // ────────────────────────────────
-                // 6️⃣ Gestion du formulaire de participation
-                // ────────────────────────────────
-                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['participer'])) {
-                    if (!$userConnecte) {
-                        header('Location: index.php?entity=accueil&action=connexion');
-                        exit;
-                    }
-
-                    $nbPlacesRestantes = $covoiturage->getNbPlaces() ?? 0;
-                    $coutCredits = $covoiturage->getPrix() ?? 1;
-
-                    if ($creditsUser < $coutCredits) {
-                        $errorMessage = "Crédits insuffisants pour réserver ce covoiturage.";
-                    } elseif ($nbPlacesRestantes <= 0) {
-                        $errorMessage = "Plus de place disponible pour ce trajet.";
-                    } else {
-                        if (isset($_POST['confirm']) && $_POST['confirm'] === 'oui') {
-                            $this->creditsService->updateCredits($userConnecte, $creditsUser - $coutCredits);
-                            $this->covoituragesRepo->updatePlacesAndStatut($covoiturage->getIdCovoiturage(), $nbPlacesRestantes - 1, 'en cours');
-                            $this->reservationService->createReservation($userConnecte, $covoiturage, $coutCredits);
-                            $successMessage = "Votre réservation a été confirmée ! $coutCredits crédits ont été débités.";
-                            $nbPlacesRestantes--;
-                        } else {
-                            $confirmNeeded = true;
-                        }
-                    }
-                }
-
-                // ────────────────────────────────
-                // 7️⃣ Préparation des variables pour la vue
-                // ────────────────────────────────
-
             }
         }
+
 
         // ────────────────────────────────
         // 8️⃣ Chargement de la vue
         // ────────────────────────────────
         require __DIR__ . '/../../View/covoiturages/detail_covoiturage.php';
     }
+
 
 
 
@@ -272,25 +270,26 @@ class CovoituragesDisplayController
         // Récupération de tous les covoiturages
         $covoiturages = $this->covoituragesRepo->getCovoituragesByUtilisateur($userId);
 
-
-
-
         // Pour chaque covoiturage, calcul heure d'arrivée et infos véhicule
         foreach ($covoiturages as $c) {
+            // Calcul heure d'arrivée
             $c->calculerHeureArrivee();
 
-            $vehiculeId = $c->getIdVehicule();
-            $vehicule = ($vehiculeId && $this->vehiculesRepo)
-                ? $this->vehiculesRepo->getEntityById($vehiculeId)
-                : null;
-
-            $c->setVehiculeNom($vehicule ? $vehicule->getNomMarque() : '—');
-            $c->setVehiculeModele($vehicule ? $vehicule->getModele() : '—');
+            $vehicule = $c->getVehicule();
+            if ($vehicule) {
+                // Utiliser le nom de la marque directement depuis le covoiturage
+                $c->setVehiculeNom($c->getVehiculeNom() ?? '—');
+                $c->setVehiculeModele($vehicule->getModele() ?? '—');
+            } else {
+                $c->setVehiculeNom('—');
+                $c->setVehiculeModele('—');
+            }
         }
 
         // Affichage de la vue
         require __DIR__ . '/../../View/covoiturages/mes_covoiturages.php';
     }
+
 
     /**
      * Supprime un covoiturage
@@ -302,21 +301,29 @@ class CovoituragesDisplayController
         $userId = $_SESSION['user_id'] ?? null;
         $covoiturageId = (int)($_GET['id'] ?? 0);
 
+        // Vérification de l'identité utilisateur + ID covoiturage valide
         if (!$userId || $covoiturageId <= 0) {
             header('Location: index.php?entity=accueil&action=connexion');
             exit;
         }
 
-        $covoiturage = $this->covoituragesRepo->findAll();
+        // 1. Récupérer le covoiturage
+        $covoiturage = $this->covoituragesRepo->findById($covoiturageId);
+
+        // 2. Vérifier que le covoiturage existe ET qu'il appartient à l'utilisateur
         if (!$covoiturage || $covoiturage->getIdUtilisateur() != $userId) {
             header('Location: index.php?entity=covoiturages&action=mes_covoiturages');
             exit;
         }
 
+        // 3. Supprimer
         $this->covoituragesRepo->delete($covoiturageId);
+
+        // 4. Redirection
         header('Location: index.php?entity=covoiturages&action=mes_covoiturages');
         exit;
     }
+
 
     /**
      * Recherche de covoiturages avec filtres souples

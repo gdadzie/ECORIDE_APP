@@ -15,16 +15,12 @@ class DashboardController
 
     public function dashboard(): void
     {
-
         if (empty($_SESSION['user'])) {
             header('Location: index.php?entity=utilisateurs&action=login');
             exit;
         }
 
-        $db = Database::getConnection();
         $user = $this->repo->findById($_SESSION['user_id']);
-
-        $_SESSION['user'] = $user;
 
         $publicDir = realpath(__DIR__ . '/../../public') . DIRECTORY_SEPARATOR;
         $userPhoto = ltrim($user->getPhoto(), '/');
@@ -33,8 +29,15 @@ class DashboardController
             ? '/' . $userPhoto
             : '/uploads/photos/default-avatar.jpg';
 
+        // Définir pseudo et rôle pour la vue
+        $userPseudo = $user->getPseudo() ?? 'Utilisateur';
+        $userRole   = $user->getRole() ?? 0;
+
+        $_SESSION['user'] = $user;
+
         require __DIR__ . '/../../View/dashboard/tableau_de_bord.php';
     }
+
 
     public function charteGraphique(): void
     {
