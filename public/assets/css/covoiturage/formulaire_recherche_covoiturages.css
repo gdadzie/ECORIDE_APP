@@ -213,3 +213,32 @@ body {
         max-width: 100%;
     }
 }
+.autocomplete-container {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none;
+}
+
+.autocomplete-list .item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.autocomplete-list .item:hover,
+.autocomplete-list .item.active {
+    background-color: #d4edda;
+    color: #155724;
+}
