@@ -1,131 +1,137 @@
-<?php if (!empty($message)): ?>
-    <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
-<?php endif; ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mise à jour profil - EcoRide</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title>EcoRide - Profil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="assets/js/covoiturages/formulaire_recherche_covoiturages.js" defer></script>
+
     <style>
         body {
             background-color: #f5fff5;
             font-family: 'Poppins', sans-serif;
         }
-        .card-user, .card-form {
-            border-radius: 20px;
+        .card-profile {
+            max-width: 600px;
+            margin: auto;
             padding: 25px;
-            box-shadow: 0 0 10px rgba(0, 100, 0, 0.1);
             background: white;
-        }
-        .card-form {
-            max-width: 350px;
+            border-radius: 18px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
         }
         .profile-img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
+            object-fit: cover;
             display: block;
             margin: 0 auto 15px auto;
         }
-        .btn-modifier {
-            background: #4caf50;
-            color: white;
-            border-radius: 10px;
+        .edit-btn {
+            background: transparent;
+            border: none;
+            color: #4caf50;
+            font-size: 16px;
+            cursor: pointer;
         }
-        .btn-modifier:hover {
-            background: #388e3c;
+        .edit-btn:hover {
+            color: #2e7d32;
+        }
+        .inline-form {
+            margin-top: 8px;
         }
     </style>
 </head>
 
 <body>
-<?php include __DIR__ . '/../../partials/header.php'; ?>
 
 <div class="container py-5">
-    <h1 class="text-center mb-5">Mon profil</h1>
-    <div class="row g-4">
-        <!-- ==================== CARTE INFO UTILISATEUR ==================== -->
-        <div class="col-md-7">
-            <div class="card-user">
+    <div class="card-profile">
+        <img src="<?= htmlspecialchars($utilisateur->getPhoto() ?: '/uploads/photos/default-avatar.jpg') ?>"
+             class="profile-img">
 
-                <img src="<?= htmlspecialchars($utilisateur->getPhoto() ?: '/uploads/photos/default-avatar.jpg') ?>"
-                     class="profile-img" alt="Photo utilisateur">
+        <h3 class="text-center mb-4 text-success"><?= htmlspecialchars($utilisateur->getPseudo()) ?></h3>
 
-                <h3 class="text-center text-success mb-3"><?= htmlspecialchars($utilisateur->getPseudo()) ?></h3>
+        <!-- NOM -->
+        <div class="mb-3">
+            <strong>Nom :</strong> <?= htmlspecialchars($utilisateur->getNom()) ?>
+            <button class="edit-btn" onclick="toggleEdit('nom')">✏️</button>
 
-                <p><strong>Nom :</strong> <?= htmlspecialchars($utilisateur->getNom()) ?></p>
-                <p><strong>Prénom :</strong> <?= htmlspecialchars($utilisateur->getPrenom()) ?></p>
-                <p><strong>Email :</strong> <?= htmlspecialchars($utilisateur->getEmail()) ?></p>
-                <p><strong>Téléphone :</strong> <?= htmlspecialchars($utilisateur->getTelephone()) ?></p>
-                <p><strong>Type utilisateur :</strong> <?= htmlspecialchars($utilisateur->getTypeUtilisateur()) ?></p>
-
-                <div class="text-center mt-3">
-                    <button class="btn btn-modifier" id="btnModifier">Modifier le profil</button>
-                </div>
-
-            </div>
+            <form id="form-nom" class="inline-form d-none" method="POST"
+                  action="index.php?entity=utilisateurs&action=mise_a_jour_profil">
+                <input type="text" name="nom" class="form-control form-control-sm mb-2"
+                       value="<?= htmlspecialchars($utilisateur->getNom()) ?>" required>
+                <button class="btn btn-success btn-sm">Enregistrer</button>
+            </form>
         </div>
 
-        <!-- ==================== CARTE FORMULAIRE (MASQUÉE AU DÉBUT) ==================== -->
-        <div class="col-md-5 d-none" id="carteFormulaire">
-            <div class="card-form">
+        <!-- PRENOM -->
+        <div class="mb-3">
+            <strong>Prénom :</strong> <?= htmlspecialchars($utilisateur->getPrenom()) ?>
+            <button class="edit-btn" onclick="toggleEdit('prenom')">✏️</button>
 
-                <h4 class="text-center text-success mb-3">Mettre à jour</h4>
+            <form id="form-prenom" class="inline-form d-none" method="POST"
+                  action="index.php?entity=utilisateurs&action=mise_a_jour_profil">
+                <input type="text" name="prenom" class="form-control form-control-sm mb-2"
+                       value="<?= htmlspecialchars($utilisateur->getPrenom()) ?>" required>
+                <button class="btn btn-success btn-sm">Enregistrer</button>
+            </form>
+        </div>
 
-                <form action="../index.php?entity=utilisateurs&action=mise_a_jour_profil"
-                      method="POST" enctype="multipart/form-data">
+        <!-- TELEPHONE -->
+        <div class="mb-3">
+            <strong>Téléphone :</strong> <?= htmlspecialchars($utilisateur->getTelephone()) ?>
+            <button class="edit-btn" onclick="toggleEdit('telephone')">✏️</button>
 
-                    <div class="mb-3">
-                        <label class="form-label">Nom :</label>
-                        <input type="text" class="form-control" name="nom"
-                               value="<?= htmlspecialchars($utilisateur->getNom()) ?>" required>
-                    </div>
+            <form id="form-telephone" class="inline-form d-none" method="POST"
+                  action="index.php?entity=utilisateurs&action=mise_a_jour_profil">
+                <input type="text" name="telephone" class="form-control form-control-sm mb-2"
+                       value="<?= htmlspecialchars($utilisateur->getTelephone()) ?>" required>
+                <button class="btn btn-success btn-sm">Enregistrer</button>
+            </form>
+        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Prénom :</label>
-                        <input type="text" class="form-control" name="prenom"
-                               value="<?= htmlspecialchars($utilisateur->getPrenom()) ?>" required>
-                    </div>
+        <!-- TYPE UTILISATEUR -->
+        <div class="mb-3">
+            <strong>Type :</strong> <?= htmlspecialchars($utilisateur->getTypeUtilisateur()) ?>
+            <button class="edit-btn" onclick="toggleEdit('type')">✏️</button>
 
-                    <div class="mb-3">
-                        <label class="form-label">Téléphone :</label>
-                        <input type="tel" class="form-control" name="telephone"
-                               value="<?= htmlspecialchars($utilisateur->getTelephone()) ?>" required>
-                    </div>
+            <form id="form-type" class="inline-form d-none" method="POST"
+                  action="index.php?entity=utilisateurs&action=mise_a_jour_profil">
+                <select name="type_utilisateur" class="form-select form-select-sm mb-2">
+                    <option value="passager"   <?= $utilisateur->getTypeUtilisateur()==='passager'?'selected':'' ?>>Passager</option>
+                    <option value="conducteur" <?= $utilisateur->getTypeUtilisateur()==='conducteur'?'selected':'' ?>>Conducteur</option>
+                    <option value="PC"         <?= $utilisateur->getTypeUtilisateur()==='PC'?'selected':'' ?>>Passager & Conducteur</option>
+                </select>
+                <button class="btn btn-success btn-sm">Enregistrer</button>
+            </form>
+        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Photo :</label>
-                        <input type="file" class="form-control" name="photo" accept="image/*">
-                    </div>
+        <!-- PHOTO -->
+        <div class="mb-3">
+            <strong>Photo :</strong>
+            <button class="edit-btn" onclick="toggleEdit('photo')">✏️</button>
 
-                    <div class="mb-3">
-                        <label class="form-label">Type utilisateur :</label>
-                        <select class="form-select" name="type_utilisateur">
-                            <option value="passager" <?= $utilisateur->getTypeUtilisateur() === 'passager' ? 'selected' : '' ?>>Passager</option>
-                            <option value="conducteur" <?= $utilisateur->getTypeUtilisateur() === 'conducteur' ? 'selected' : '' ?>>Conducteur</option>
-                            <option value="PC" <?= $utilisateur->getTypeUtilisateur() === 'PC' ? 'selected' : '' ?>>Passager & Conducteur</option>
-                        </select>
-                    </div>
-
-                    <button class="btn btn-success w-100">Enregistrer</button>
-
-                </form>
-
-            </div>
+            <form id="form-photo" class="inline-form d-none" method="POST"
+                  enctype="multipart/form-data"
+                  action="index.php?entity=utilisateurs&action=mise_a_jour_profil">
+                <input type="file" name="photo" class="form-control form-control-sm mb-2" accept="image/*" required>
+                <button class="btn btn-success btn-sm">Enregistrer</button>
+            </form>
         </div>
 
     </div>
 </div>
 
 <script>
-    document.getElementById("btnModifier").addEventListener("click", function() {
-        document.getElementById("carteFormulaire").classList.remove("d-none");
-        this.style.display = "none";
-    });
+    function toggleEdit(field) {
+        document.querySelectorAll(".inline-form").forEach(f => f.classList.add("d-none"));
+        document.getElementById("form-" + field).classList.toggle("d-none");
+    }
 </script>
 
 </body>

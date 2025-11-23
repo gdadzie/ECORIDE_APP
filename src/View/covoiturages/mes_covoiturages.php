@@ -85,7 +85,7 @@
                                 <li><i class="bi bi-people-fill text-success me-2"></i> Places : <?= htmlspecialchars($c->getNbPlaces() ?? 0) ?></li>
                                 <li><i class="bi bi-currency-euro text-success me-2"></i> Prix : <?= htmlspecialchars($c->getPrix() ?? 0) ?> €</li>
                                 <li><i class="bi bi-hourglass-split text-success me-2"></i> Durée : <?= htmlspecialchars($c->getDureeMinutes() ?? 0) ?> min</li>
-                                <li><i class="bi bi-car-front-fill text-success me-2"></i> Véhicule :  <?= $c->getVehiculeNom(); ?> - <?= htmlspecialchars($c->getVehiculeModele() ?? '—') ?></li>
+                                <li><i class="bi bi-car-front-fill text-success me-2"></i> Véhicule :  <?= $c->getVehiculeNom(); ?>- <?= htmlspecialchars($c->getVehiculeModele() ?? '—') ?></li>
                                 <li><i class="bi bi-info-circle-fill text-success me-2"></i> Statut : <?= htmlspecialchars($c->getStatut() ?? '—') ?></li>
                             </ul>
 
