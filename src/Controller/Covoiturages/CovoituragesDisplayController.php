@@ -153,24 +153,10 @@ class CovoituragesDisplayController
         // ────────────────────────────────
         // 5️⃣ Informations véhicule
         // ────────────────────────────────
-        $idVehicule = $covoiturage->getIdVehicule();
-        $vehicule   = $idVehicule ? $this->vehiculesRepo->getEntityById($idVehicule) : null;
-
-        $idMarque = $vehicule?->getIdMarque();
-        $marque = $idMarque ? $this->marquesRepo->find($idMarque): null;
-
-
-
-        if ($vehicule) {
-            $vehiculeModele = $vehicule->getModele() ?? '-';
-
-            // Récupération marque
-
-            $vehiculeNom = $marque?->getNomMarque() ?? '-';
-
-
-
-        }
+        $vehiculeNom      = $covoiturage->getVehiculeNom() ?? '-';
+        $vehiculeModele   = $covoiturage->getVehiculeModele() ?? '-';
+        $vehiculeEnergie  = $covoiturage->getVehiculeEnergie() ?? '-';
+        $vehiculePlaces   = $covoiturage->getNbPlaces() ?? '-';
 
         // Énergie
         $vehiculeEnergie = $covoiturage->getVehiculeEnergie() ?? '-';

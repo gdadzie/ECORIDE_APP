@@ -22,14 +22,14 @@ class DashboardController
 
         $user = $this->repo->findById($_SESSION['user_id']);
 
-        $publicDir = realpath(__DIR__ . '/../../public') . DIRECTORY_SEPARATOR;
-        $userPhoto = ltrim($user->getPhoto(), '/');
-        $fullPath = $publicDir . $userPhoto;
-        $photoPathWeb = (!empty($userPhoto) && file_exists($fullPath))
-            ? '/' . $userPhoto
+        // Construire le chemin correct pour la photo
+        $userPhoto = $user->getPhoto(); // juste le nom du fichier
+        $photoDir = __DIR__ . '/../../../public/uploads/photos/';
+        $photoPathWeb = (!empty($userPhoto) && file_exists($photoDir . $userPhoto))
+            ? '/uploads/photos/' . $userPhoto
             : '/uploads/photos/default-avatar.jpg';
 
-        // Définir pseudo et rôle pour la vue
+        // Pseudo et rôle pour la vue
         $userPseudo = $user->getPseudo() ?? 'Utilisateur';
         $userRole   = $user->getRole() ?? 0;
 

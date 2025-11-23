@@ -103,8 +103,8 @@ class UtilisateursRepository
                 $photo = $_FILES['photo'];
                 $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-                if (!in_array($photo['type'], $allowedTypes) || $photo['size'] > 2 * 1024 * 1024) {
-                    throw new Exception("Format ou taille de fichier invalide (max 2 Mo, JPG/PNG/GIF).");
+                if (!in_array($photo['type'], $allowedTypes) || $photo['size'] > 2.5 * 1024 * 1024) {
+                    throw new Exception("Format ou taille de fichier invalide (max 2,5 Mo, JPG/PNG/GIF).");
                 }
 
                 $ext = pathinfo($photo['name'], PATHINFO_EXTENSION);
@@ -175,8 +175,8 @@ class UtilisateursRepository
     public function uploadPhotoUtilisateur(Utilisateur $utilisateur, array $file): void
     {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!in_array($file['type'], $allowedTypes) || $file['size'] > 2 * 1024 * 1024) {
-            throw new Exception("Format ou taille de fichier invalide (max 2 Mo, JPG/PNG/GIF).");
+        if (!in_array($file['type'], $allowedTypes) || $file['size'] > 2.5 * 1024 * 1024) {
+            throw new Exception("Format ou taille de fichier invalide (max 2,5 Mo, JPG/PNG/GIF).");
         }
 
         if ($file['error'] !== UPLOAD_ERR_OK) {

@@ -14,89 +14,117 @@
             background-color: #f5fff5;
             font-family: 'Poppins', sans-serif;
         }
-        .profil-container {
-            max-width: 600px;
-            margin: 50px auto;
-            background: white;
-            padding: 30px;
+        .card-user, .card-form {
             border-radius: 20px;
-            box-shadow: 0 0 15px rgba(0, 100, 0, 0.1);
+            padding: 25px;
+            box-shadow: 0 0 10px rgba(0, 100, 0, 0.1);
+            background: white;
         }
-        h2 {
-            color: #2e7d32;
-            text-align: center;
-            margin-bottom: 25px;
+        .card-form {
+            max-width: 350px;
         }
-        button {
-            background-color: #4caf50;
-            border: none;
-        }
-        button:hover {
-            background-color: #388e3c;
-        }
-        .preview-img {
-            display: block;
-            max-width: 150px;
-            margin: 10px auto;
-            border-radius: 50%;
+        .profile-img {
+            width: 120px;
+            height: 120px;
             object-fit: cover;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto 15px auto;
+        }
+        .btn-modifier {
+            background: #4caf50;
+            color: white;
+            border-radius: 10px;
+        }
+        .btn-modifier:hover {
+            background: #388e3c;
         }
     </style>
 </head>
+
 <body>
 <?php include __DIR__ . '/../../partials/header.php'; ?>
 
-<div class="profil-container">
-    <h2>🌿 Mise à jour du profil</h2>
+<div class="container py-5">
+    <h1 class="text-center mb-5">Mon profil</h1>
+    <div class="row g-4">
+        <!-- ==================== CARTE INFO UTILISATEUR ==================== -->
+        <div class="col-md-7">
+            <div class="card-user">
 
-    <form action="../index.php?entity=utilisateurs&action=mise_a_jour_profil" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="nom" class="form-label">Nom :</label>
-            <input type="text" class="form-control" name="nom" id="nom" value="<?= htmlspecialchars($utilisateur->getNom()) ?>" required>
+                <img src="<?= htmlspecialchars($utilisateur->getPhoto() ?: '/uploads/photos/default-avatar.jpg') ?>"
+                     class="profile-img" alt="Photo utilisateur">
+
+                <h3 class="text-center text-success mb-3"><?= htmlspecialchars($utilisateur->getPseudo()) ?></h3>
+
+                <p><strong>Nom :</strong> <?= htmlspecialchars($utilisateur->getNom()) ?></p>
+                <p><strong>Prénom :</strong> <?= htmlspecialchars($utilisateur->getPrenom()) ?></p>
+                <p><strong>Email :</strong> <?= htmlspecialchars($utilisateur->getEmail()) ?></p>
+                <p><strong>Téléphone :</strong> <?= htmlspecialchars($utilisateur->getTelephone()) ?></p>
+                <p><strong>Type utilisateur :</strong> <?= htmlspecialchars($utilisateur->getTypeUtilisateur()) ?></p>
+
+                <div class="text-center mt-3">
+                    <button class="btn btn-modifier" id="btnModifier">Modifier le profil</button>
+                </div>
+
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="prenom" class="form-label">Prénom :</label>
-            <input type="text" class="form-control" name="prenom" id="prenom" value="<?= htmlspecialchars($utilisateur->getPrenom()) ?>" required>
+        <!-- ==================== CARTE FORMULAIRE (MASQUÉE AU DÉBUT) ==================== -->
+        <div class="col-md-5 d-none" id="carteFormulaire">
+            <div class="card-form">
+
+                <h4 class="text-center text-success mb-3">Mettre à jour</h4>
+
+                <form action="../index.php?entity=utilisateurs&action=mise_a_jour_profil"
+                      method="POST" enctype="multipart/form-data">
+
+                    <div class="mb-3">
+                        <label class="form-label">Nom :</label>
+                        <input type="text" class="form-control" name="nom"
+                               value="<?= htmlspecialchars($utilisateur->getNom()) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Prénom :</label>
+                        <input type="text" class="form-control" name="prenom"
+                               value="<?= htmlspecialchars($utilisateur->getPrenom()) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Téléphone :</label>
+                        <input type="tel" class="form-control" name="telephone"
+                               value="<?= htmlspecialchars($utilisateur->getTelephone()) ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Photo :</label>
+                        <input type="file" class="form-control" name="photo" accept="image/*">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Type utilisateur :</label>
+                        <select class="form-select" name="type_utilisateur">
+                            <option value="passager" <?= $utilisateur->getTypeUtilisateur() === 'passager' ? 'selected' : '' ?>>Passager</option>
+                            <option value="conducteur" <?= $utilisateur->getTypeUtilisateur() === 'conducteur' ? 'selected' : '' ?>>Conducteur</option>
+                            <option value="PC" <?= $utilisateur->getTypeUtilisateur() === 'PC' ? 'selected' : '' ?>>Passager & Conducteur</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-success w-100">Enregistrer</button>
+
+                </form>
+
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="telephone" class="form-label">Téléphone :</label>
-            <input type="tel" class="form-control" name="telephone" id="telephone" value="<?= htmlspecialchars($utilisateur->getTelephone()) ?>" placeholder="Ex : 0612345678" required>
-        </div>
-
-        <div class="mb-3 text-center">
-            <label for="photo" class="form-label">Photo de profil :</label>
-            <input type="file" class="form-control" name="photo" id="photo" accept="image/*">
-            <img id="preview" class="preview-img" src="<?= htmlspecialchars($utilisateur->getPhoto() ?: '/uploads/photos/default-avatar.jpg') ?>" alt="Prévisualisation">
-        </div>
-
-        <div class="mb-3">
-            <label for="type_utilisateur" class="form-label">Rôle :</label>
-            <select class="form-select" name="type_utilisateur" id="type_utilisateur" required>
-                <option value="passager" <?= $utilisateur->getTypeUtilisateur() === 'passager' ? 'selected' : '' ?>>Passager</option>
-                <option value="conducteur" <?= $utilisateur->getTypeUtilisateur() === 'conducteur' ? 'selected' : '' ?>>Conducteur</option>
-                <option value="PC" <?= $utilisateur->getTypeUtilisateur() === 'PC' ? 'selected' : '' ?>>Passager & Conducteur</option>
-            </select>
-        </div>
-
-        <button type="submit" name="valider" class="btn btn-success w-100">Enregistrer les modifications</button>
-    </form>
+    </div>
 </div>
 
 <script>
-    const photoInput = document.getElementById('photo');
-    const previewImg = document.getElementById('preview');
-
-    photoInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if(file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-            }
-            reader.readAsDataURL(file);
-        }
+    document.getElementById("btnModifier").addEventListener("click", function() {
+        document.getElementById("carteFormulaire").classList.remove("d-none");
+        this.style.display = "none";
     });
 </script>
 

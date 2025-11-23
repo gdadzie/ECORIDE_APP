@@ -372,16 +372,12 @@ class CovoituragesRepository
      * @return array
      */
 
-    public function findCovoiturageByDepartArriveeDate(?string $depart, ?string $arrivee, ?string $date): array
-    {
-        // Normalisation PHP identique à SQL (translittération ASCII)
-        $normalize = function ($str) {
-            $str = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $str));
-            return $str;
-        };
-
-        $departNorm = $depart ? $normalize($depart) : null;
-        $arriveeNorm = $arrivee ? $normalize($arrivee) : null;
+    public function findCovoiturageByDepartArriveeDate(
+        ?string $depart,
+        ?string $arrivee,
+        ?string $date,
+        array $filters = []
+    ): array {
 
         $sql = "
         SELECT 
@@ -393,8 +389,8 @@ class CovoituragesRepository
             vd.nom_ville AS ville_depart_nom,
             va.nom_ville AS ville_arrivee_nom,
             (SELECT AVG(note)
-                FROM avis
-                WHERE id_receveur = u.id_utilisateur
+             FROM avis
+             WHERE id_receveur = u.id_utilisateur
             ) AS note_conducteur
         FROM covoiturages c
         JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur
@@ -407,25 +403,61 @@ class CovoituragesRepository
 
         $params = [];
 
-        // Normalisation SQL fiable (enlève TOUS les accents)
-        $sqlNormalizeDepart = "LOWER(CONVERT(vd.nom_ville USING ASCII))";
-        $sqlNormalizeArrivee = "LOWER(CONVERT(va.nom_ville USING ASCII))";
-
-        if (!empty($departNorm)) {
-            $sql .= " AND $sqlNormalizeDepart LIKE :depart";
-            $params[':depart'] = '%' . $departNorm . '%';
+        /* -------------------------------------------------------
+           FILTRE : VILLE DE DÉPART (accent-insensible utf8mb4)
+        ------------------------------------------------------- */
+        if (!empty($depart)) {
+            $sql .= " AND vd.nom_ville COLLATE utf8mb4_unicode_ci LIKE :depart";
+            $params[':depart'] = '%' . $depart . '%';
         }
 
-        if (!empty($arriveeNorm)) {
-            $sql .= " AND $sqlNormalizeArrivee LIKE :arrivee";
-            $params[':arrivee'] = '%' . $arriveeNorm . '%';
+        /* -------------------------------------------------------
+           FILTRE : VILLE D’ARRIVÉE
+        ------------------------------------------------------- */
+        if (!empty($arrivee)) {
+            $sql .= " AND va.nom_ville COLLATE utf8mb4_unicode_ci LIKE :arrivee";
+            $params[':arrivee'] = '%' . $arrivee . '%';
         }
 
-        if (!empty($date)) {
+        /* -------------------------------------------------------
+           FILTRE : DATE (format YYYY-MM-DD)
+        ------------------------------------------------------- */
+        if (!empty($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             $sql .= " AND c.date_depart = :date";
             $params[':date'] = $date;
         }
 
+        /* ================================================
+           🔽 FILTRES DU COVOITURAGE (eco, prix, durée, note)
+           ================================================ */
+
+        /* ÉCOLOGIQUE */
+        if (!empty($filters['eco'])) {
+            $sql .= " AND c.ecologique = 1";
+        }
+
+        /* PRIX MAX */
+        if (!empty($filters['prix_max'])) {
+            $sql .= " AND c.prix <= :prix_max";
+            $params[':prix_max'] = (float)$filters['prix_max'];
+        }
+
+        /* DURÉE MAX */
+        if (!empty($filters['duree_max'])) {
+            $sql .= " AND c.duree_minutes <= :duree_max";
+            $params[':duree_max'] = (int)$filters['duree_max'];
+        }
+
+        /* NOTE MINIMUM */
+        if (!empty($filters['note_min'])) {
+            // HAVING doit être utilisé car note_conducteur est une sous-select
+            $sql .= " HAVING note_conducteur >= :note_min OR note_conducteur IS NULL";
+            $params[':note_min'] = (float)$filters['note_min'];
+        }
+
+        /* -------------------------------------------------------
+           EXÉCUTION
+        ------------------------------------------------------- */
         $stmt = $this->conn->prepare($sql);
 
         foreach ($params as $key => $value) {
@@ -433,16 +465,18 @@ class CovoituragesRepository
         }
 
         $stmt->execute();
-
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $resultats = [];
+
         foreach ($rows as $row) {
             $resultats[] = $this->hydrateCovoiturage($row);
         }
 
         return $resultats;
     }
+
+
 
 
     // ────────────────────────────────

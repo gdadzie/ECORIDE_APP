@@ -1,117 +1,36 @@
+<?php
+// Assure-toi que $utilisateur est défini
+$photoPathWeb = $user->getPhoto()
+        ? '/uploads/photos/' . $user->getPhoto()
+        : '/uploads/photos/default-avatar.jpg';
+$userPseudo = $user->getPseudo();
+$userRole = $user->getRole(); // 2 = admin
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EcoRide - Tableau de bord</title>
-
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
-
-    <!-- Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
-
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f4f7f4;
-            color: #2f3e2f;
-        }
-
-        .hero {
-            text-align: center;
-            padding: 50px 20px;
-            background: linear-gradient(135deg, #1c7c2c, #43b258);
-            color: white;
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-        }
-
-        .hero .user-photo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .card-dashboard {
-            border: none;
-            border-radius: 18px;
-            padding: 10px;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all .25s;
-        }
-
-        .card-dashboard:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-        }
-
-        .card-dashboard h5 {
-            font-weight: 600;
-            color: #1c7c2c;
-        }
-
-        .btn-success {
-            background-color: #1c7c2c;
-            border-color: #1c7c2c;
-        }
-        .btn-success:hover {
-            background-color: #155e22;
-            border-color: #155e22;
-        }
-
-        .btn-logout {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 10px;
-            color: white;
-            text-decoration: none;
-            transition: .25s;
-        }
-
-        .btn-logout:hover {
-            background: rgba(255,255,255,0.35);
-        }
-
-        /* Animation apparition */
-        .fade-in {
-            animation: fadeIn .8s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Modal */
-        .modal-content {
-            border-radius: 20px;
-        }
-
-        .modal-header, .modal-footer {
-            border: none;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRide - Mon tableau de bord</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme/theme.css">
+    <link rel="stylesheet" href="assets/css/tableau_de_bord.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
 </head>
+
 <body>
 
-
-<section class="hero mb-5 fade-in">
-    <img src="<?= htmlspecialchars($photoPathWeb) ?>" alt="Photo de profil" class="user-photo" id="currentPhoto" />
+<section class="hero mb-5 fade-in text-center">
+    <img src="<?= htmlspecialchars($user->getPhoto() ?: '/uploads/photos/default-avatar.jpg') ?>" alt="Photo de profil" class="user-photo rounded-circle mb-3" id="currentPhoto" style="width:120px;height:120px;object-fit:cover;" />
     <h2 class="mt-3">Bonjour, <?= htmlspecialchars($userPseudo) ?> !</h2>
 
     <button type="button" class="btn btn-outline-light btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalPhoto">
         <i class="bi bi-camera"></i> Changer ma photo
     </button>
 
-    <a href="index.php?entity=utilisateurs&action=deconnexion" class="btn-logout mt-3 d-inline-block">
+    <a href="index.php?entity=utilisateurs&action=deconnexion" class="btn btn-danger mt-3 d-inline-block">
         <i class="bi bi-box-arrow-right"></i> Se déconnecter
     </a>
 </section>
@@ -125,12 +44,13 @@
                     <div class="card-body">
                         <h5><i class="bi bi-people"></i> Liste des utilisateurs</h5>
                         <p>Consultez tous les utilisateurs, modifiez ou supprimez-les si nécessaire.</p>
-                        <a href="../utilisateurs/index.php?entity=utilisateurs&action=liste_utilisateurs" class="btn btn-success">Accéder</a>
+                        <a href="index.php?entity=utilisateurs&action=liste_utilisateurs" class="btn btn-success">Accéder</a>
                     </div>
                 </div>
             </div>
         <?php endif; ?>
 
+        <!-- Créer un covoiturage -->
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
@@ -141,6 +61,7 @@
             </div>
         </div>
 
+        <!-- Rechercher un covoiturage -->
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
@@ -151,6 +72,7 @@
             </div>
         </div>
 
+        <!-- Mes covoiturages -->
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
@@ -161,6 +83,7 @@
             </div>
         </div>
 
+        <!-- Mes véhicules -->
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
@@ -171,22 +94,24 @@
             </div>
         </div>
 
+        <!-- Messagerie -->
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
                     <h5><i class="bi bi-chat-dots"></i> Messagerie</h5>
                     <p>Échangez avec les conducteurs, l’administrateur ou d’autres utilisateurs.</p>
-                    <a href="../utilisateurs/index.php?entity=messagerie&action=inbox" class="btn btn-success">Accéder à la messagerie</a>
+                    <a href="index.php?entity=messagerie&action=inbox" class="btn btn-success">Accéder à la messagerie</a>
                 </div>
             </div>
         </div>
 
+        <!-- Mon profil -->
         <div class="col-12 col-sm-6 col-md-4">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
                     <h5><i class="bi bi-person"></i> Mon profil</h5>
                     <p>Consultez et mettez à jour vos informations personnelles et préférences.</p>
-                    <a href="../utilisateurs/index.php?entity=utilisateurs&action=mon_profil" class="btn btn-success">Accéder</a>
+                    <a href="index.php?entity=utilisateurs&action=mise_a_jour_profil" class="btn btn-success">Accéder</a>
                 </div>
             </div>
         </div>
@@ -198,13 +123,13 @@
 <div class="modal fade" id="modalPhoto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="formPhoto" action="../utilisateurs/index.php?entity=utilisateurs&action=mise_a_jour_profil" method="POST" enctype="multipart/form-data">
+            <form id="formPhoto" action="index.php?entity=utilisateurs&action=mise_a_jour_profil" method="POST" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">Changer ma photo de profil</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="previewPhoto" src="<?= htmlspecialchars($photoPathWeb) ?>" class="user-photo mb-3" style="max-width:120px; max-height:120px;" />
+                    <img id="previewPhoto" src="<?= htmlspecialchars($photoPathWeb) ?>" class="user-photo mb-3 rounded-circle" style="width:120px; height:120px; object-fit:cover;" />
                     <input class="form-control" type="file" id="photo" name="photo" accept="image/*" />
                     <small class="text-muted">Taille max 2 Mo • Formats : JPG, PNG, GIF</small>
                 </div>
@@ -216,8 +141,6 @@
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     const inputPhoto = document.getElementById('photo');
@@ -233,6 +156,7 @@
     });
 
     document.getElementById('formPhoto').addEventListener('submit', () => {
+        // Met à jour l'image sur le tableau de bord après soumission
         currentPhoto.src = previewPhoto.src;
     });
 </script>

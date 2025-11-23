@@ -47,6 +47,7 @@ class ProfilController
                 $_SESSION['user']->setNom($utilisateur->getNom());
                 $_SESSION['user']->setPrenom($utilisateur->getPrenom());
                 $_SESSION['user']->setTelephone($utilisateur->getTelephone());
+                $_SESSION['user']->setPhoto($utilisateur->getPhoto());
                 $_SESSION['user']->setTypeUtilisateur($utilisateur->getTypeUtilisateur());
                 $success = true;
                 $message = "✅ Profil mis à jour avec succès !";
