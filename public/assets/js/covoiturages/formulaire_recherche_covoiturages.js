@@ -1,7 +1,3 @@
-// ===============================
-// Autocomplétion des villes
-// ===============================
-
 function debounce(fn, delay = 250) {
     let timeoutId;
     return (...args) => {
@@ -10,72 +6,122 @@ function debounce(fn, delay = 250) {
     };
 }
 
-function createList(input, items) {
-    const existing = document.querySelector(`#${input.id}-list`);
-    if (existing) existing.remove();
-    if (!items.length) return;
+function setupAutocomplete(inputId, endpoint) {
+    const input = document.getElementById(inputId);
+    const list = input.parentNode.querySelector(".autocomplete-list");
+    let currentIndex = -1;
 
-    const list = document.createElement("div");
-    list.id = `${input.id}-list`;
-    list.className = "list-group position-absolute shadow-sm";
-    list.style.zIndex = 2000;
-
-    const rect = input.getBoundingClientRect();
-    list.style.top = input.offsetTop + input.offsetHeight + "px";
-    list.style.left = input.offsetLeft + "px";
-    list.style.width = rect.width + "px";
-
-    items.forEach(v => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "list-group-item list-group-item-action";
-        item.textContent = v;
-        item.addEventListener("click", () => {
-            input.value = v;
-            list.remove();
-        });
-        list.appendChild(item);
-    });
-
-    input.parentNode.style.position = "relative";
-    input.parentNode.appendChild(list);
-}
-
-async function fetchVilles(term) {
-    if (!term || term.length < 2) return [];
-    const url = `index.php?entity=covoiturages&action=auto_completion&term=${encodeURIComponent(term)}`;
-    try {
-        const res = await fetch(url);
-        if (!res.ok) return [];
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
-    } catch {
-        return [];
-    }
-}
-
-function bindInput(selector) {
-    const input = document.querySelector(selector);
-    if (!input) return;
-    const handler = debounce(async () => {
+    const fetchAndShow = debounce(async () => {
         const term = input.value.trim();
         if (term.length < 2) {
-            const list = document.querySelector(`#${input.id}-list`);
-            if (list) list.remove();
+            list.innerHTML = "";
+            list.style.display = "none";
+            currentIndex = -1;
             return;
         }
-        const items = await fetchVilles(term);
-        createList(input, items);
-    }, 200);
-    input.addEventListener("input", handler);
 
+        try {
+            const res = await fetch(endpoint + "&term=" + encodeURIComponent(term));
+            if (!res.ok) return;
+            const data = await res.json();
+            list.innerHTML = "";
+            currentIndex = -1;
+
+            if (!Array.isArray(data) || data.length === 0) {
+                list.style.display = "none";
+                return;
+            }
+
+            data.forEach(ville => {
+                const div = document.createElement("div");
+                div.classList.add("item");
+                div.textContent = ville.nom;
+
+                div.addEventListener("click", () => {
+                    input.value = ville.nom;
+                    list.style.display = "none";
+                    currentIndex = -1;
+                });
+
+                list.appendChild(div);
+            });
+
+            list.style.display = "block";
+        } catch (err) {
+            console.error(err);
+        }
+    }, 200);
+
+    input.addEventListener("input", fetchAndShow);
+
+    // Navigation clavier avec remplissage automatique
+    input.addEventListener("keydown", (e) => {
+        const items = list.querySelectorAll(".item");
+        if (items.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            currentIndex = (currentIndex + 1) % items.length;
+            updateActive(items);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            currentIndex = (currentIndex - 1 + items.length) % items.length;
+            updateActive(items);
+        } else if (e.key === "Enter") {
+            if (currentIndex >= 0) {
+                e.preventDefault();
+                items[currentIndex].click();
+            }
+        }
+    });
+
+    function updateActive(items) {
+        items.forEach(item => item.classList.remove("active"));
+        items[currentIndex].classList.add("active");
+        input.value = items[currentIndex].textContent; // Remplissage automatique
+        items[currentIndex].scrollIntoView({ block: "nearest" });
+    }
+
+    // Fermer la liste si clic en dehors
     document.addEventListener("click", (e) => {
-        const list = document.querySelector(`#${input.id}-list`);
-        if (list && !e.target.closest(`#${input.id}-list`) && e.target !== input) list.remove();
+        if (!list.contains(e.target) && e.target !== input) {
+            list.style.display = "none";
+            currentIndex = -1;
+        }
     });
 }
 
+// Initialisation
 document.addEventListener("DOMContentLoaded", () => {
-    bindInput("#ville_depart");
-    bindInput("#ville_arrivee");
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date_depart").setAttribute("min", today);
+
+    setupAutocomplete("ville_depart", "index.php?entity=villes&action=auto_completion");
+    setupAutocomplete("ville_arrivee", "index.php?entity=villes&action=auto_completion");
+
+    const form = document.getElementById("form-recherche");
+    const dateInput = document.getElementById("date_depart");
+    form.addEventListener("submit", function(e) {
+        if (dateInput.value < today) {
+            e.preventDefault();
+            alert("Veuillez sélectionner une date valide (aujourd’hui ou ultérieure).");
+        }
+    });
+});
+
+const form = document.getElementById("form-recherche");
+const loader = document.getElementById("loader");
+
+form.addEventListener("submit", function(e) {
+    const today = new Date().toISOString().split("T")[0];
+    const dateInput = document.getElementById("date_depart");
+
+    if (dateInput.value < today) {
+        e.preventDefault();
+        alert("Veuillez sélectionner une date valide (aujourd’hui ou ultérieure).");
+        return;
+    }
+
+    // Afficher le loader avant de soumettre le formulaire
+    loader.style.display = "block";
 });
