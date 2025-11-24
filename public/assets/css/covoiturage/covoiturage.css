@@ -1,67 +1,7 @@
-/* Thème écologique */
-body {
-    background-color: #f4f9f4; /* vert très clair / blanc cassé */
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.btn-search {
-    background-color: #2e7d32;
-    color: #fff;
-}
-.btn-search:hover {
-    background-color: #1b5e20;
-}
-.btn-details {
-    background-color: #81c784;
-    color: #fff;
-}
-.btn-details:hover {
-    background-color: #66bb6a;
-}
-.covoiturage-card {
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease;
-}
-.covoiturage-card:hover {
-    transform: translateY(-5px);
-}
-.driver-info img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 15px;
-}
-.driver-info strong {
-    font-size: 1.1rem;
-}
-.trip-info p {
-    margin: 0;
-}
-.price {
-    font-weight: bold;
-    color: #2e7d32;
-}
-.eco-label {
-    background-color: #a5d6a7;
-    color: #1b5e20;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 5px;
-    font-size: 0.85rem;
-}
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .driver-info {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    .driver-info div {
-        margin-top: 8px;
-    }
-
-.formulaire-recherche{ position: absolute; background-color: #0d6efd}
-.h1{color: #0a53be}
-}
+body { background-color: #f0f8f0; }
+.navbar { background-color: #2e7d32; }
+.navbar a { color: #fff !important; }
+footer { background-color: #2e7d32; color: #fff; padding: 20px 0; }
+.btn-eco { background-color: #66bb6a; color: white; }
+.btn-eco:hover { background-color: #4caf50; color: white; }
+.card-eco { border: 2px solid #66bb6a; }
