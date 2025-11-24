@@ -187,7 +187,7 @@ $userRole = $user->getRole(); // 2 = admin
             <div class="card-dashboard p-3 d-flex flex-column h-100">
                 <h5><i class="bi bi-person"></i> Mon profil</h5>
                 <p class="text-muted">Consultez et mettez à jour vos informations personnelles et préférences.</p>
-                <a href="index.php?entity=utilisateurs&action=profil" class="btn btn-dashboard mt-auto">Accéder</a>
+                <a href="index.php?entity=utilisateurs&action=mise_a_jour_profil" class="btn btn-dashboard mt-auto">Accéder</a>
             </div>
         </div>
     </div>

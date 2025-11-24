@@ -21,7 +21,6 @@
 <section class="hero mb-5">
     <h1 class="mb-3">Bienvenue sur EcoRide</h1>
     <p class="mb-4">Partagez vos trajets et réduisez votre impact environnemental.</p>
-
     <?php include __DIR__ . '/../partials/form/formulaire_recherche_covoiturages.php'; ?>
 </section>
 
