@@ -109,10 +109,11 @@ class CovoituragesRepository
             $covoiturage->setVehicule($vehicule);
             $covoiturage->setIdVehicule((int)$row['id_vehicule']);
 
-            // Stocker directement le nom de la marque pour l'affichage
-            $covoiturage->setVehiculeNom($row['vehicule_marque'] ?? '—');
+            // Stocker le nom de la marque pour l'affichage
+            $covoiturage->setVehiculeNom($row['vehicule_nom'] ?? '—');    // <- clé SQL correcte
+            $covoiturage->setVehiculeModele($row['vehicule_modele'] ?? '—'); // <- ajouté
         } else {
-            // Si aucun véhicule, on met des valeurs par défaut
+            // Si aucun véhicule, valeurs par défaut
             $covoiturage->setVehiculeNom('—');
             $covoiturage->setVehiculeModele('—');
         }
@@ -122,7 +123,7 @@ class CovoituragesRepository
 
 
 
-    // ────────────────────────────────
+        // ────────────────────────────────
     // 🔹 CRUD de base
     // ────────────────────────────────
 

@@ -153,6 +153,8 @@ class CovoituragesDisplayController
         // ────────────────────────────────
         // 5️⃣ Informations véhicule
         // ────────────────────────────────
+        $covoiturage = $this->covoituragesRepo->findById($id);
+
         $vehiculeNom      = $covoiturage->getVehiculeNom() ?? '-';
         $vehiculeModele   = $covoiturage->getVehiculeModele() ?? '-';
         $vehiculeEnergie  = $covoiturage->getVehiculeEnergie() ?? '-';
