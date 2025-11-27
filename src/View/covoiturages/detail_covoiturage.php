@@ -38,7 +38,7 @@ if (!isset($_SESSION['user'])) {
 
 <body>
 
-<div class="container py-4 d-flex justify-content-center">
+<div class="container py-4 d-flex justify-content-center w-50">
 
     <!-- CARTE GLOBALE -->
     <div class="card shadow-lg card-large mx-auto p-4 hover-soft bg-white">
@@ -77,20 +77,32 @@ if (!isset($_SESSION['user'])) {
             </div>
 
             <!-- TRAJET -->
-            <div class="border-start border-3 border-success ps-3 mb-4">
-                <h4 class="fw-semibold mb-1">
-                    <i class="bi bi-geo-alt-fill text-success me-1"></i>
-                    <?= htmlspecialchars($covoiturage->getVilleDepartNom()) ?>
-                    →
-                    <?= htmlspecialchars($covoiturage->getVilleArriveeNom()) ?>
-                </h4>
+            <div class=" container border-start border-3 border-success ps-3 mb-4">
+                <div class=" row d-flex align-items-center gap-3 mb-2">
+                    <h4 class=" col-12 fw-semibold mb-1">
+                        <i class="bi bi-geo-alt-fill text-success me-1"></i>
+                        <?= htmlspecialchars($covoiturage->getVilleDepartNom()) ?>
+                        →
+                        <?= htmlspecialchars($covoiturage->getVilleArriveeNom()) ?>
+                    </h4>
+                    <div class=" col-12 text-muted">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        <?= htmlspecialchars($affichageDate) ?> <br>
 
-                <div class="text-muted">
-                    <i class="bi bi-calendar3 me-1"></i>
-                    <?= htmlspecialchars($affichageDate) ?> <br>
-                    <i class="bi bi-clock me-1"></i>
-                    <?= htmlspecialchars($heureDepart) ?> — <?= htmlspecialchars($heureArrivee) ?>
+                    </div>
+                    <div  class=" col-12 text-muted">
+                        <span><i class="bi bi-clock me-1"></i>Heure de depart: <?= htmlspecialchars($heureDepart) ?></span>
+
+                    </div>
+                    <div  class=" col-12 text-muted">
+                        <span><i class="bi bi-clock me-1"></i>Heure d'arrivée: <?= htmlspecialchars($heureArrivee) ?></span>
+
+                    </div>
+
                 </div>
+
+
+
             </div>
 
             <!-- BLOCS INFO -->
