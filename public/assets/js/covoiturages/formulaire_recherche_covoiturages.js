@@ -96,8 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("date_depart").setAttribute("min", today);
 
-    setupAutocomplete("ville_depart", "index.php?entity=villes&action=auto_completion");
-    setupAutocomplete("ville_arrivee", "index.php?entity=villes&action=auto_completion");
+    setupAutocomplete("ville_depart", "index.php?entity=covoiturages&action=auto_completion");
+    setupAutocomplete("ville_arrivee", "index.php?entity=covoiturages&action=auto_completion");
 
     const form = document.getElementById("form-recherche");
     const dateInput = document.getElementById("date_depart");
@@ -107,21 +107,4 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Veuillez sélectionner une date valide (aujourd’hui ou ultérieure).");
         }
     });
-});
-
-const form = document.getElementById("form-recherche");
-const loader = document.getElementById("loader");
-
-form.addEventListener("submit", function(e) {
-    const today = new Date().toISOString().split("T")[0];
-    const dateInput = document.getElementById("date_depart");
-
-    if (dateInput.value < today) {
-        e.preventDefault();
-        alert("Veuillez sélectionner une date valide (aujourd’hui ou ultérieure).");
-        return;
-    }
-
-    // Afficher le loader avant de soumettre le formulaire
-    loader.style.display = "block";
 });
